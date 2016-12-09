@@ -1,0 +1,273 @@
+{
+  "//": "Please only change this file when pimatic is NOT running, otherwise pimatic will overwrite your changes.",
+  "settings": {
+    "debug": true,
+    "logLevel": "debug",
+    "httpServer": {
+      "enabled": true,
+      "port": 8080
+    },
+    "httpsServer": {},
+    "authentication": {
+      "secret": "z6Isbqhg1CTbKVS7x8VhwLsguvE9Q3joej5HqzMxRljVsplW1sNhH0rfeAHPwJLc+XCGXS/IY78HgSMlvjgKuQ=="
+    },
+    "database": {
+      "deviceAttributeLogging": [
+        {
+          "deviceId": "*",
+          "attributeName": "*",
+          "type": "*",
+          "interval": "0",
+          "expire": "7d"
+        },
+        {
+          "deviceId": "*",
+          "attributeName": "*",
+          "type": "continuous",
+          "interval": "5min",
+          "expire": "7d"
+        },
+        {
+          "deviceId": "*",
+          "attributeName": "temperature",
+          "type": "number",
+          "expire": "1y"
+        },
+        {
+          "deviceId": "*",
+          "attributeName": "humidity",
+          "type": "number",
+          "expire": "1y"
+        }
+      ],
+      "messageLogging": [
+        {
+          "level": "*",
+          "tags": [],
+          "expire": "7d"
+        },
+        {
+          "level": "debug",
+          "tags": [],
+          "expire": "0"
+        }
+      ]
+    },
+    "cors": {
+      "allowedOrigin": "*"
+    },
+    "gui": {}
+  },
+  "plugins": [
+    {
+      "plugin": "cron"
+    },
+    {
+      "plugin": "mobile-frontend",
+      "active": true
+    },
+    {
+      "debug": true,
+      "plugin": "alert",
+      "active": true
+    }
+  ],
+  "devices": [
+    {
+      "buttons": [
+        {
+          "id": "contact-close",
+          "text": "close contact"
+        },
+        {
+          "id": "contact-open",
+          "text": "open contact"
+        },
+        {
+          "id": "presence",
+          "text": "trigger presence"
+        }
+      ],
+      "id": "buttons-device",
+      "name": "buttons-device",
+      "class": "ButtonsDevice"
+    },
+    {
+      "id": "prealert-switch",
+      "name": "prealert-switch",
+      "class": "AlertSwitch"
+    },
+    {
+      "id": "alert-switch",
+      "name": "alert-switch",
+      "class": "AlertSwitch"
+    },
+    {
+      "id": "alert-alarm",
+      "name": "Alert !!!",
+      "class": "DummySwitch"
+    },
+    {
+      "id": "prealert-alarm",
+      "name": "Prealert !!!",
+      "class": "DummySwitch"
+    },
+    {
+      "id": "contact-sensor",
+      "name": "contact-sensor",
+      "class": "DummyContactSensor"
+    },
+    {
+      "autoReset": true,
+      "resetTime": 10000,
+      "id": "presence-sensor",
+      "name": "presence-sensor",
+      "class": "DummyPresenceSensor"
+    },
+    {
+      "id": "prealert-system",
+      "name": "prealert system",
+      "class": "AlertSystem",
+      "sensors": [
+        "presence-sensor"
+      ],
+      "switches": [
+        "prealert-alarm"
+      ],
+      "alert": "prealert-switch"
+    },
+    {
+      "id": "alert-system",
+      "name": "alert system",
+      "class": "AlertSystem",
+      "sensors": [
+        "contact-sensor"
+      ],
+      "switches": [
+        "alert-alarm"
+      ],
+      "alert": "alert-switch"
+    }
+  ],
+  "rules": [
+    {
+      "id": "presence-sensor",
+      "name": "presence-sensor",
+      "rule": "when presence is pressed then set presence of presence-sensor present",
+      "active": true,
+      "logging": false
+    },
+    {
+      "id": "contact-open",
+      "name": "contact-open",
+      "rule": "when contact-open is pressed then open contact-sensor",
+      "active": true,
+      "logging": false
+    },
+    {
+      "id": "contact-close",
+      "name": "contact-close",
+      "rule": "when contact-close is pressed then close contact-sensor",
+      "active": true,
+      "logging": false
+    }
+  ],
+  "pages": [
+    {
+      "id": "favourite",
+      "name": "Favourites",
+      "devices": [
+        {
+          "deviceId": "alert-system"
+        },
+        {
+          "deviceId": "alert-switch"
+        },
+        {
+          "deviceId": "alert-alarm"
+        },
+        {
+          "deviceId": "prealert-system"
+        },
+        {
+          "deviceId": "prealert-switch"
+        },
+        {
+          "deviceId": "prealert-alarm"
+        },
+        {
+          "deviceId": "contact-sensor"
+        },
+        {
+          "deviceId": "presence-sensor"
+        },
+        {
+          "deviceId": "buttons-device"
+        }
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "id": "prealert",
+      "name": "prealert",
+      "devices": [
+        "prealert-system",
+        "prealert-switch",
+        "prealert-alarm"
+      ],
+      "rules": [],
+      "variables": []
+    },
+    {
+      "id": "alert",
+      "name": "alert",
+      "devices": [
+        "alert-system",
+        "alert-switch",
+        "alert-alarm"
+      ],
+      "rules": [],
+      "variables": []
+    },
+    {
+      "id": "sensors",
+      "name": "sensors",
+      "devices": [
+        "contact-sensor",
+        "presence-sensor",
+        "buttons-device"
+      ],
+      "rules": [],
+      "variables": []
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "password": "admin",
+      "role": "admin"
+    }
+  ],
+  "roles": [
+    {
+      "name": "admin",
+      "permissions": {
+        "pages": "write",
+        "rules": "write",
+        "variables": "write",
+        "messages": "write",
+        "events": "write",
+        "devices": "write",
+        "groups": "write",
+        "plugins": "write",
+        "updates": "write",
+        "database": "write",
+        "config": "write",
+        "controlDevices": true,
+        "restart": true
+      }
+    }
+  ],
+  "variables": []
+}
