@@ -1,7 +1,9 @@
 module.exports = (env) =>
+
   Promise = env.require 'bluebird'
   t = env.require('decl-api').types
   _ = env.require 'lodash'
+
 
   class AlertPlugin extends env.plugins.Plugin
 
@@ -22,13 +24,13 @@ module.exports = (env) =>
 
   plugin = new AlertPlugin
 
+
   class AlertSwitch extends env.devices.DummySwitch
+
 
   class AlertSystem extends env.devices.DummySwitch
 
     _trigger: ""
-    _sensors: []
-    _switches: []
 
     attributes:
       trigger:
@@ -52,6 +54,9 @@ module.exports = (env) =>
       @config = config
       @plugin = plugin
 
+      @sensors = []
+      @switches = []
+
       @on 'state', (state) =>
         stateString = if state then 'activated' else 'deactivated'
         env.logger.info("alert system \"#{@id}\" #{stateString}")
@@ -68,13 +73,13 @@ module.exports = (env) =>
         alert.on 'state', (state) =>
           @setAlert(alert, state)
 
-        @_switches.push(alert)
+        @switches.push(alert)
 
         env.logger.debug("Initializing alert system \"#{@id}\" with switch #{alert.id}")
 
         register = (sensor, event, expectedValue) =>
-          env.logger.info("Device \"#{sensor.id}\" registerd as sensor for \"#{@id}\"")
-          @_sensors.push(sensor)
+          env.logger.debug("Device \"#{sensor.id}\" registerd as sensor for \"#{@id}\"")
+          @sensors.push(sensor)
           sensor.on event, (value) =>
             if value is expectedValue
               @setAlert(sensor, true)
@@ -91,10 +96,10 @@ module.exports = (env) =>
         for id in @config.switches
           actuator = @plugin.framework.deviceManager.getDeviceById(id)
           if actuator instanceof env.devices.SwitchActuator
-            @_switches.push(actuator)
-            env.logger.info("Device \"#{actuator.id}\" registerd as switch for \"#{@id}\"")
+            @switches.push(actuator)
+            env.logger.debug("Device \"#{actuator.id}\" registerd as switch for \"#{@id}\"")
           else
-            env.logger.info("Device \"#{actuator.id}\" is not a valid switch for \"#{@id}\"")
+            env.logger.error("Device \"#{actuator.id}\" is not a valid switch for \"#{@id}\"")
 
     setAlert: (device, alert) =>
       if @_state
@@ -103,10 +108,10 @@ module.exports = (env) =>
             env.logger.info("Alert triggered by \"#{device.id}\"")
             @_setTrigger(device.id)
         else
-          env.logger.info("OFF")
+          env.logger.info("Alert switched off off")
           @_setTrigger(null)
 
-        for actuator in @_switches
+        for actuator in @switches
           actuator.changeStateTo(alert)
 
   return plugin
