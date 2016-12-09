@@ -1,0 +1,25 @@
+{
+  "name": "pimatic-alert",
+  "description": "Alert system plugin for pimatic",
+  "main": "alert.coffee",
+  "files": [
+    "alert.coffee",
+    "README.md",
+    "alert-config-schema.coffee",
+    "device-config-schema.coffee",
+    "LICENSE"
+  ],
+  "version": "0.0.1",
+  "private": false,
+  "configSchema": "alert-config-schema.coffee",
+  "scripts": {},
+  "dependencies": {},
+  "devDependencies": {},
+  "peerDependencies": {
+    "pimatic": "~0.9.0"
+  },
+  "engines": {
+    "node": ">0.10.x",
+    "npm": ">1.1.x"
+  }
+}
