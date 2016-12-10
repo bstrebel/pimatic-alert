@@ -56,8 +56,17 @@ module.exports = (env) =>
 
       @sensors = []
       @switches = []
+      @alert = null
+      @remote = null
 
       @on 'state', (state) =>
+        @remote.changeStateTo(state) if @remote?
+        # always switch off alert if system is disabled
+        if not state
+          @alert?.changeStateTo(state)
+          for actuator in @switches
+            actuator?.changeStateTo(state)
+
         stateString = if state then 'activated' else 'deactivated'
         env.logger.info("alert system \"#{@id}\" #{stateString}")
 
@@ -73,12 +82,21 @@ module.exports = (env) =>
         alert.on 'state', (state) =>
           @setAlert(alert, state)
 
+        @alert = alert
         @switches.push(alert)
 
-        env.logger.debug("Initializing alert system \"#{@id}\" with switch #{alert.id}")
+        env.logger.debug("Initializing alert system \"#{@id}\" with switch \"#{alert.id}\"")
+
+        if @config.remote?
+          remote = @plugin.framework.deviceManager.getDeviceById(@config.remote)
+          if remote?
+            @remote = remote
+            env.logger.debug("Device \"#{remote.id}\" registered as remote device")
+            remote.on 'state', (state) =>
+              @changeStateTo(state)
 
         register = (sensor, event, expectedValue) =>
-          env.logger.debug("Device \"#{sensor.id}\" registerd as sensor for \"#{@id}\"")
+          env.logger.debug("Device \"#{sensor.id}\" registered as sensor for \"#{@id}\"")
           @sensors.push(sensor)
           sensor.on event, (value) =>
             if value is expectedValue
@@ -86,20 +104,23 @@ module.exports = (env) =>
 
         for id in @config.sensors
           sensor = @plugin.framework.deviceManager.getDeviceById(id)
-          if sensor instanceof env.devices.PresenceSensor
-            register sensor, 'presence', true
-          else if sensor instanceof env.devices.ContactSensor
-            register sensor, 'contact', false
-          else
-            env.logger.error("Device \"#{sensor.id}\" is not a valid sensor for \"#{@id}\"")
+          if sensor?
+            if sensor instanceof env.devices.PresenceSensor
+              register sensor, 'presence', true
+            else if sensor instanceof env.devices.ContactSensor
+              register sensor, 'contact', false
+            else
+              env.logger.error("Device \"#{sensor.id}\" is not a valid sensor for \"#{@id}\"")
 
         for id in @config.switches
           actuator = @plugin.framework.deviceManager.getDeviceById(id)
-          if actuator instanceof env.devices.SwitchActuator
-            @switches.push(actuator)
-            env.logger.debug("Device \"#{actuator.id}\" registerd as switch for \"#{@id}\"")
-          else
-            env.logger.error("Device \"#{actuator.id}\" is not a valid switch for \"#{@id}\"")
+          if actuator?
+            if actuator instanceof env.devices.SwitchActuator
+              @switches.push(actuator)
+              env.logger.debug("Device \"#{actuator.id}\" registerd as switch for \"#{@id}\"")
+            else
+              env.logger.error("Device \"#{actuator.id}\" is not a valid switch for \"#{@id}\"")
+
 
     setAlert: (device, alert) =>
       if @_state
@@ -108,7 +129,7 @@ module.exports = (env) =>
             env.logger.info("Alert triggered by \"#{device.id}\"")
             @_setTrigger(device.id)
         else
-          env.logger.info("Alert switched off off")
+          env.logger.info("Alert switched off")
           @_setTrigger(null)
 
         for actuator in @switches

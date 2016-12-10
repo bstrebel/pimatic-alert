@@ -27,4 +27,8 @@ module.exports = {
         items:
           description: "Switch ID"
           type: "string"
+      remote:
+        description: "Remote control"
+        type: "string"
+        default: ""
 }
