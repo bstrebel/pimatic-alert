@@ -81,7 +81,7 @@ module.exports = (env) =>
             actuator?.changeStateTo(state)
 
         stateString = if state then 'activated' else 'deactivated'
-        env.logger.info("alert system \"#{@id}\" #{stateString}")
+        env.logger.info("Alert system \"#{@id}\" #{stateString}")
 
       @plugin.framework.on 'after init', =>
         @_initDevice('after init')
@@ -92,6 +92,21 @@ module.exports = (env) =>
     destroy: () ->
       # remove event handlers from sensor devices
       env.logger.debug("Destroying alert system \"#{@id}\"")
+      if @alert?
+        @alert.removeListener 'state', alertHandler
+        delete(@alert.system)
+      if @remote?
+        @remote.removeListener 'state', alertHandler
+        delete(@remote.system)
+      if @sensors?
+        for sensor in @sensors
+          delete(sensor.system)
+          if sensor instanceof env.devices.PresenceSensor
+            sensor.removeListener 'presence', sensorHandler
+          else if sensor instanceof env.devices.ContactSensor
+            sensor.removeListener 'contact', sensorHandler
+          else
+            env.logger.error("Invalid sensor type found in alert system \"#{@id}\"")
       super()
 
     setAlert: (device, alert) =>
@@ -106,6 +121,16 @@ module.exports = (env) =>
 
         for actuator in @switches
           actuator.changeStateTo(alert)
+
+    alertHandler = (state) ->
+      @system.setAlert(this, state)
+
+    remoteHandler = (state) ->
+      @system.changeStateTo(state)
+
+    sensorHandler = (value) ->
+      if value is @expectedValue
+        @system.setAlert(this, true)
 
     _initDevice: (event) =>
 
@@ -123,8 +148,9 @@ module.exports = (env) =>
       if alert not instanceof AlertSwitch
         env.logger.error("Device \"#{alert.id}\" is not a valid alert switch for \"#{@id}\"")
         return
-      alert.on 'state', (state) =>
-        @setAlert(alert, state)
+
+      alert.system = @
+      alert.on 'state', alertHandler
 
       @alert = alert
       @switches.push(alert)
@@ -136,15 +162,17 @@ module.exports = (env) =>
         if remote?
           @remote = remote
           env.logger.debug("Device \"#{remote.id}\" registered as remote device for \"#{@id}\"")
-          remote.on 'state', (state) =>
-            @changeStateTo(state)
+
+          remote.system = @
+          remote.on 'state', remoteHandler
 
       register = (sensor, event, expectedValue) =>
         env.logger.debug("Device \"#{sensor.id}\" registered as sensor for \"#{@id}\"")
         @sensors.push(sensor)
-        sensor.on event, (value) =>
-          if value is expectedValue
-            @setAlert(sensor, true)
+
+        sensor.system = @
+        sensor.expectedValue = expectedValue
+        sensor.on event, sensorHandler
 
       for id in @config.sensors
         sensor = @plugin.framework.deviceManager.getDeviceById(id)
