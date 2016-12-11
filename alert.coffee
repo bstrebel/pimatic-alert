@@ -67,21 +67,29 @@ module.exports = (env) =>
       @switches = null
       @alert = null
       @remote = null
+      @rejected = false
 
       env.logger.debug("Constructor for alert system \"#{@id}\" with @afterInit=#{@plugin.afterInit()}")
 
       @on 'state', (state) =>
         # sync with optional remote switch
         @remote.changeStateTo(state) if @remote?
-
-        # always switch off alert if system is disabled
-        if @switches? and not state
-          @alert?.changeStateTo(state)
-          for actuator in @switches
-            actuator?.changeStateTo(state)
-
-        stateString = if state then 'activated' else 'deactivated'
-        env.logger.info("Alert system \"#{@id}\" #{stateString}")
+        if state
+          if not @_checkSensors()
+            @rejected = true
+            @emit 'state', false
+            env.logger.debug("Alert system \"#{@id}\" activation rejected")
+          else
+            @rejected = false
+            env.logger.debug("Alert system \"#{@id}\" activated")
+        else
+          if not @rejected
+            # always switch off alert if system is disabled
+            if @switches?
+              @alert?.changeStateTo(state)
+              for actuator in @switches
+                actuator?.changeStateTo(state)
+            env.logger.debug("Alert system \"#{@id}\" deactivated")
 
       @plugin.framework.on 'after init', =>
         @_initDevice('after init')
@@ -101,6 +109,8 @@ module.exports = (env) =>
       if @sensors?
         for sensor in @sensors
           delete(sensor.system)
+          delete(sensor.required)
+          delete(sensor.expectedValue)
           if sensor instanceof env.devices.PresenceSensor
             sensor.removeListener 'presence', sensorHandler
           else if sensor instanceof env.devices.ContactSensor
@@ -108,6 +118,7 @@ module.exports = (env) =>
           else
             env.logger.error("Invalid sensor type found in alert system \"#{@id}\"")
       super()
+
 
     setAlert: (device, alert) =>
       if @_state
@@ -166,21 +177,22 @@ module.exports = (env) =>
           remote.system = @
           remote.on 'state', remoteHandler
 
-      register = (sensor, event, expectedValue) =>
+      register = (sensor, event, expectedValue, required) =>
         env.logger.debug("Device \"#{sensor.id}\" registered as sensor for \"#{@id}\"")
         @sensors.push(sensor)
 
         sensor.system = @
+        sensor.required = if required? then '_' + event else null
         sensor.expectedValue = expectedValue
         sensor.on event, sensorHandler
 
-      for id in @config.sensors
-        sensor = @plugin.framework.deviceManager.getDeviceById(id)
+      for item in @config.sensors
+        sensor = @plugin.framework.deviceManager.getDeviceById(item.deviceId)
         if sensor?
           if sensor instanceof env.devices.PresenceSensor
-            register sensor, 'presence', true
+            register sensor, 'presence', true, item.required
           else if sensor instanceof env.devices.ContactSensor
-            register sensor, 'contact', false
+            register sensor, 'contact', false, item.required
           else
             env.logger.error("Device \"#{sensor.id}\" is not a valid sensor for \"#{@id}\"")
         else
@@ -194,5 +206,13 @@ module.exports = (env) =>
             env.logger.debug("Device \"#{actuator.id}\" registerd as switch for \"#{@id}\"")
           else
             env.logger.error("Device \"#{actuator.id}\" is not a valid switch for \"#{@id}\"")
+
+    _checkSensors: () =>
+      for sensor in @sensors
+        if sensor.required?
+          if sensor[sensor.required] == sensor.expectedValue
+            env.logger.info("Device #{sensor.id} not ready for alert system \"#{@id}\"")
+            return false
+      return true
 
   return plugin

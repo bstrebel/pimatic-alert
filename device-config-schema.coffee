@@ -19,7 +19,15 @@ module.exports = {
         default: []
         items:
           description: "Sensor ID"
-          type: "string"
+          type: "object"
+          properties:
+            deviceId:
+              description: "Device ID of the sensor"
+              type: "string"
+            required:
+              description: "Required to enable alert system"
+              type: "boolean"
+              default: true
       switches:
         description: "List of switch devices"
         type: "array"
