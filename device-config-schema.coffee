@@ -10,9 +10,20 @@ module.exports = {
     type: "object"
     extensions: ["xLink", "xConfirm", "xOnLabel", "xOffLabel"]
     properties:
+      remote:
+        description: "Remote control"
+        type: "string"
+        default: ""
       alert:
         description: "Alert switch"
         type: "string"
+      switches:
+        description: "List of switch devices"
+        type: "array"
+        default: []
+        items:
+          description: "Switch ID"
+          type: "string"
       sensors:
         description: "List of sensor devices"
         type: "array"
@@ -21,22 +32,11 @@ module.exports = {
           description: "Sensor ID"
           type: "object"
           properties:
-            deviceId:
+            name:
               description: "Device ID of the sensor"
               type: "string"
             required:
               description: "Required to enable alert system"
               type: "boolean"
               default: true
-      switches:
-        description: "List of switch devices"
-        type: "array"
-        default: []
-        items:
-          description: "Switch ID"
-          type: "string"
-      remote:
-        description: "Remote control"
-        type: "string"
-        default: ""
 }

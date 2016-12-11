@@ -187,7 +187,7 @@ module.exports = (env) =>
         sensor.on event, sensorHandler
 
       for item in @config.sensors
-        sensor = @plugin.framework.deviceManager.getDeviceById(item.deviceId)
+        sensor = @plugin.framework.deviceManager.getDeviceById(item.name)
         if sensor?
           if sensor instanceof env.devices.PresenceSensor
             register sensor, 'presence', true, item.required

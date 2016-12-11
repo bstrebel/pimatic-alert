@@ -94,13 +94,18 @@
     },
     {
       "id": "prealert-switch",
-      "name": "prealert-switch",
+      "name": "prealert switch",
       "class": "AlertSwitch"
     },
     {
       "id": "alert-switch",
-      "name": "alert-switch",
+      "name": "alert switch",
       "class": "AlertSwitch"
+    },
+    {
+      "id": "alert-remote",
+      "name": "alert remote",
+      "class": "DummySwitch"
     },
     {
       "id": "alert-alarm",
@@ -129,7 +134,10 @@
       "name": "prealert system",
       "class": "AlertSystem",
       "sensors": [
-        "presence-sensor"
+        {
+          "name": "presence-sensor",
+          "required": false
+        }
       ],
       "switches": [
         "prealert-alarm"
@@ -141,12 +149,16 @@
       "name": "alert system",
       "class": "AlertSystem",
       "sensors": [
-        "contact-sensor"
+        {
+          "name": "contact-sensor",
+          "required": true
+        }
       ],
       "switches": [
         "alert-alarm"
       ],
-      "alert": "alert-switch"
+      "alert": "alert-switch",
+      "remote": "alert-remote"
     }
   ],
   "rules": [
@@ -179,6 +191,9 @@
       "devices": [
         {
           "deviceId": "alert-system"
+        },
+        {
+          "deviceId": "alert-remote"
         },
         {
           "deviceId": "alert-switch"
@@ -225,7 +240,8 @@
       "devices": [
         "alert-system",
         "alert-switch",
-        "alert-alarm"
+        "alert-alarm",
+        "alert-remote"
       ],
       "rules": [],
       "variables": []
