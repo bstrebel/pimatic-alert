@@ -39,7 +39,6 @@ module.exports = (env) =>
   class AlertSystem extends env.devices.DummySwitch
 
     _trigger: ""
-    _afterInit = false
 
     attributes:
       trigger:
