@@ -88,6 +88,7 @@ module.exports = (env) =>
               @alert?.changeStateTo(state)
               for actuator in @switches
                 actuator?.changeStateTo(state)
+            @_setTrigger("")
             env.logger.debug("Alert system \"#{@id}\" deactivated")
 
       @plugin.framework.on 'after init', =>
