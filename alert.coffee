@@ -52,9 +52,12 @@ module.exports = (env) =>
     getTrigger: () -> Promise.resolve(@_trigger)
 
     _setTrigger: (trigger) ->
-      trigger = "" unless trigger
-      @_trigger = if trigger then trigger else ""
-      @emit 'trigger', trigger
+      @_trigger = if trigger? then @_trigger = trigger else @_trigger = ""
+      @varTrigger = @_trigger
+      @emit 'update', 'trigger'
+      @emit 'trigger', @_trigger if @displayTrigger
+
+
 
     constructor: (config, lastState, plugin) ->
 
@@ -62,13 +65,30 @@ module.exports = (env) =>
       @config = config
       @plugin = plugin
 
+      @deviceManager = @plugin.framework.deviceManager
+      @variableManager = @plugin.framework.variableManager
+
+      @timeformat = @plugin.config.timeformat
+      @displayTrigger = @config.trigger
+      @autoConfig = @config.autoconfig
+
       @sensors = null
       @switches = null
       @alert = null
       @remote = null
       @rejected = false
 
-      env.logger.debug("Constructor for alert system \"#{@id}\" with @afterInit=#{@plugin.afterInit()}")
+      @variables = {
+        trigger: null
+        time: null
+        state: null
+      }
+
+
+      @on 'update', (reason) =>
+        @variables['time'] = new Date().format(@timeformat)
+        for key, value of @variables
+          @variableManager.setVariableToValue(@id + '-' + key, value)
 
       @on 'rejected', () =>
         env.logger.debug("Alert system \"#{@id}\" activation rejected")
@@ -98,8 +118,13 @@ module.exports = (env) =>
       @plugin.framework.on 'after init', =>
         @_initDevice('after init')
 
-      # initialize only on recreation of the device
-      @_initDevice('constructor') if @plugin.afterInit()
+      if @plugin.afterInit()
+        # initialize only on recreation of the device
+        @_initDevice('constructor')
+      else
+        # autoconfiguration of devices
+        @_autoConfig()
+
 
     destroy: () ->
       # remove event handlers from sensor devices
@@ -159,7 +184,7 @@ module.exports = (env) =>
       if not @config.alert?
         env.logger.error("Missing alert switch in configuration for \"#{@id}\"")
         return
-      alert = @plugin.framework.deviceManager.getDeviceById(@config.alert)
+      alert = @deviceManager.getDeviceById(@config.alert)
       if alert not instanceof AlertSwitch
         env.logger.error("Device \"#{alert.id}\" is not a valid alert switch for \"#{@id}\"")
         return
@@ -173,7 +198,7 @@ module.exports = (env) =>
       env.logger.debug("Device \"#{alert.id}\" registered as alert switch device for \"#{@id}\"")
 
       if @config.remote?
-        remote = @plugin.framework.deviceManager.getDeviceById(@config.remote)
+        remote = @deviceManager.getDeviceById(@config.remote)
         if remote?
           @remote = remote
           env.logger.debug("Device \"#{remote.id}\" registered as remote device for \"#{@id}\"")
@@ -191,7 +216,7 @@ module.exports = (env) =>
         sensor.on event, sensorHandler
 
       for item in @config.sensors
-        sensor = @plugin.framework.deviceManager.getDeviceById(item.name)
+        sensor = @deviceManager.getDeviceById(item.name)
         if sensor?
           if sensor instanceof env.devices.PresenceSensor
             register sensor, 'presence', true, item.required
@@ -203,7 +228,7 @@ module.exports = (env) =>
           env.logger.error("Device \"#{id}\" not found for \"#{@id}\"")
 
       for id in @config.switches
-        actuator = @plugin.framework.deviceManager.getDeviceById(id)
+        actuator = @deviceManager.getDeviceById(id)
         if actuator?
           if actuator instanceof env.devices.SwitchActuator
             @switches.push(actuator)
@@ -218,5 +243,51 @@ module.exports = (env) =>
             env.logger.info("Device #{sensor.id} not ready for alert system \"#{@id}\"")
             return false
       return true
+
+    _autoConfig: () =>
+
+      # AlertSwitch device
+      alertId = if @config.alert? not '' then @config.alert else @id + '-switch'
+      @config.alert = alertId
+      if not @deviceManager.isDeviceInConfig(alertId)
+        config = {
+          id: alertId
+          name: "#{@name} switch"
+          class: "AlertSwitch"
+        }
+        try
+          alert = @deviceManager._loadDevice(config, null, null)
+          @deviceManager.addDeviceToConfig(config)
+          env.logger.debug("Device \"#{alertId}\" added to configuration of \"#{@id}\"")
+        catch error
+          env.logger.error(error)
+
+      # AlertSystem variable device setup
+      variables = []
+      for suffix, value of @variables
+        name = @id + '-' + suffix
+        if not @variableManager.isVariableDefined(name)
+          @variableManager.addVariable(name, "value", "")
+
+        variables.push({
+          name: name
+          expression: '$' + name
+        })
+
+      variablesId = if @config.variables? not '' then @config.variables else @id + '-variables'
+      @config.variables = variablesId
+      if not @deviceManager.isDeviceInConfig(variablesId)
+        config = {
+          id: variablesId,
+          name: "#{@name} state"
+          class: "VariablesDevice"
+          variables: variables
+        }
+        try
+          variables = @deviceManager._loadDevice(config, null, null)
+          @deviceManager.addDeviceToConfig(config)
+          env.logger.debug("Device \"#{variablesId}\" added to configuration of \"#{@id}\"")
+        catch error
+          env.logger.error(error)
 
   return plugin

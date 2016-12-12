@@ -11,12 +11,25 @@ module.exports = {
     extensions: ["xLink", "xConfirm", "xOnLabel", "xOffLabel"]
     properties:
       remote:
-        description: "Remote control"
+        description: "Optional remote control switch"
         type: "string"
         default: ""
+      autoconfig:
+        description: "Generate default switch devices and variables"
+        type: "boolean"
+        default: false
+      trigger:
+        description: "Display trigger device on alert system switch"
+        type: "boolean"
+        default: false
       alert:
         description: "Alert switch"
         type: "string"
+        default: ""
+      variables:
+        description: "Alert system variable device"
+        type: "string"
+        default: ""
       switches:
         description: "List of switch devices"
         type: "array"

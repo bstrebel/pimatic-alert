@@ -6,4 +6,8 @@ module.exports = {
       description: "Enable debug output"
       type: "boolean"
       default: false
+    timeformat:
+      description: "Time format specification"
+      type: "string"
+      default: "YYYY-MM-DD hh:mm:ss"
 }
