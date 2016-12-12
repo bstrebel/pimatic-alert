@@ -70,14 +70,18 @@ module.exports = (env) =>
 
       env.logger.debug("Constructor for alert system \"#{@id}\" with @afterInit=#{@plugin.afterInit()}")
 
+      @on 'rejected', () =>
+        env.logger.debug("Alert system \"#{@id}\" activation rejected")
+        @getState().then( (state) => @changeStateTo(false) )
+
       @on 'state', (state) =>
+        return unless @plugin.afterInit()
         # sync with optional remote switch
         @remote.changeStateTo(state) if @remote?
         if state
           if not @_checkSensors()
             @rejected = true
-            @emit 'state', false
-            env.logger.debug("Alert system \"#{@id}\" activation rejected")
+            @emit 'rejected'
           else
             @rejected = false
             env.logger.debug("Alert system \"#{@id}\" activated")
