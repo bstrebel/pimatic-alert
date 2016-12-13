@@ -9,7 +9,7 @@
     "device-config-schema.coffee",
     "LICENSE"
   ],
-  "version": "0.0.1",
+  "version": "0.2.1",
   "private": false,
   "configSchema": "alert-config-schema.coffee",
   "scripts": {},
@@ -21,5 +21,25 @@
   "engines": {
     "node": ">0.10.x",
     "npm": ">1.1.x"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bstrebel/pimatic-alert.git"
+  },
+  "keywords": [
+    "pimatic",
+    "plugin",
+    "devices",
+    "alert",
+    "homeduino",
+    "sensor",
+    "actuator",
+    "alarm"
+  ],
+  "author": "Bernd Strebel",
+  "license": "GPL-2.0",
+  "bugs": {
+    "url": "https://github.com/bstrebel/pimatic-alert/issues"
+  },
+  "homepage": "https://github.com/bstrebel/pimatic-alert#readme"
 }
