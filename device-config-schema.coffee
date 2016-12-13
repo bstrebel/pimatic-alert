@@ -17,7 +17,7 @@ module.exports = {
       autoconfig:
         description: "Generate default switch devices and variables"
         type: "boolean"
-        default: false
+        default: true
       trigger:
         description: "Display trigger device on alert system switch"
         type: "boolean"
@@ -26,7 +26,7 @@ module.exports = {
         description: "Alert switch"
         type: "string"
         default: ""
-      variables:
+      state:
         description: "Alert system variable device"
         type: "string"
         default: ""

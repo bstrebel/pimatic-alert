@@ -42,7 +42,7 @@ module.exports = (env) =>
 
     attributes:
       trigger:
-        description: "device that triggered the alarm"
+        description: "Device that triggered the alarm"
         type: t.string
       state:
         description: "The current state of the switch"
@@ -53,10 +53,7 @@ module.exports = (env) =>
 
     _setTrigger: (trigger) ->
       @_trigger = if trigger? then @_trigger = trigger else @_trigger = ""
-      @varTrigger = @_trigger
-      @emit 'update', 'trigger'
       @emit 'trigger', @_trigger if @displayTrigger
-
 
 
     constructor: (config, lastState, plugin) ->
@@ -79,52 +76,62 @@ module.exports = (env) =>
       @rejected = false
 
       @variables = {
-        trigger: null
-        time: null
-        state: null
+        time: null    # timestamp of the last update
+        info: null   # Enabled,Disabled,Rejected,Alert,Error
+        state: null   # Enabled,Disabled,Rejected,Alert,Error
+        trigger: null # device id of alert trigger
+        reject: null  # device id which caused the reject
+        error: null   # error message
       }
 
 
-      @on 'update', (reason) =>
-        @variables['time'] = new Date().format(@timeformat)
-        for key, value of @variables
-          @variableManager.setVariableToValue(@id + '-' + key, value)
-
       @on 'rejected', () =>
+        # switch back to "off" immediately after we resolved the state change
         env.logger.debug("Alert system \"#{@id}\" activation rejected")
         @getState().then( (state) => @changeStateTo(false) )
 
       @on 'state', (state) =>
+        # process system switch state changes
         return unless @plugin.afterInit()
         # sync with optional remote switch
         @remote.changeStateTo(state) if @remote?
         if state
           if not @_checkSensors()
+            @variables['state'] = "Rejected"
             @rejected = true
             @emit 'rejected'
           else
             @rejected = false
-            env.logger.debug("Alert system \"#{@id}\" activated")
+            @variables['state'] = "Enabled"
+            @variables['trigger'] = null
+            env.logger.debug("Alert system \"#{@id}\" enabled")
         else
           if not @rejected
+            @variables['state'] = "Disabled"
+            @variables['trigger'] = null
             # always switch off alert if system is disabled
             if @switches?
               @alert?.changeStateTo(state)
               for actuator in @switches
                 actuator?.changeStateTo(state)
             @_setTrigger("")
-            env.logger.debug("Alert system \"#{@id}\" deactivated")
+            env.logger.debug("Alert system \"#{@id}\" disabled")
+
+        @_updateState('state')
 
       @plugin.framework.on 'after init', =>
+        # wait for the 'after init' event
+        # until all devices are loaded
         @_initDevice('after init')
 
       if @plugin.afterInit()
         # initialize only on recreation of the device
+        # skip if we are called the first time during
+        # startup
         @_initDevice('constructor')
       else
-        # autoconfiguration of devices
-        @_autoConfig()
-
+        # autoconfiguration of option is set
+        @_autoConfig() if @config.autoconfig
 
     destroy: () ->
       # remove event handlers from sensor devices
@@ -148,19 +155,29 @@ module.exports = (env) =>
             env.logger.error("Invalid sensor type found in alert system \"#{@id}\"")
       super()
 
-
     setAlert: (device, alert) =>
+      # called indirect by sensor devices via event handler
+      # and from alert system device to switch off the alert
       if @_state
         if alert
           if device not instanceof env.devices.SwitchActuator
             env.logger.info("Alert triggered by \"#{device.id}\"")
+            @variables['state'] = 'Alert'
+            @variables['trigger'] = device.id
+            @_updateState('alert')
             @_setTrigger(device.id)
         else
           env.logger.info("Alert switched off")
+          @variables['state'] = 'Disabled'
           @_setTrigger(null)
 
         for actuator in @switches
           actuator.changeStateTo(alert)
+
+    ################################################
+    #  named removeable(!) alert handlers required #
+    #  because auf device recreation               #
+    ################################################
 
     alertHandler = (state) ->
       @system.setAlert(this, state)
@@ -172,6 +189,10 @@ module.exports = (env) =>
       if value is @expectedValue
         @system.setAlert(this, true)
 
+    ###############################################
+    # delayed device initialization after startup #
+    ###############################################
+
     _initDevice: (event) =>
 
       env.logger.debug("Initializing alert system \"#{@id}\" from [#{event}]")
@@ -180,6 +201,8 @@ module.exports = (env) =>
       @switches = []
       @alert = null
       @remote = null
+
+      @variables['state'] = "Error"
 
       if not @config.alert?
         env.logger.error("Missing alert switch in configuration for \"#{@id}\"")
@@ -236,13 +259,22 @@ module.exports = (env) =>
           else
             env.logger.error("Device \"#{actuator.id}\" is not a valid switch for \"#{@id}\"")
 
+      @variables['state'] = if @_state then "Enabled" else "Disabled"
+      @_updateState('init')
+
     _checkSensors: () =>
       for sensor in @sensors
         if sensor.required?
           if sensor[sensor.required] == sensor.expectedValue
+            @variables['reject'] = sensor.id
             env.logger.info("Device #{sensor.id} not ready for alert system \"#{@id}\"")
             return false
+      @variables['reject'] = null
       return true
+
+    #####################################################
+    # dynamic creation of devices and runtime vatiabled #
+    #####################################################
 
     _autoConfig: () =>
 
@@ -272,10 +304,10 @@ module.exports = (env) =>
         variables.push({
           name: name
           expression: '$' + name
-        })
+        }) if suffix in ["time", "info", "state"]
 
-      variablesId = if @config.variables? not '' then @config.variables else @id + '-variables'
-      @config.variables = variablesId
+      variablesId = if @config.variables? not '' then @config.variables else @id + '-state'
+      @config.state = variablesId
       if not @deviceManager.isDeviceInConfig(variablesId)
         config = {
           id: variablesId,
@@ -284,10 +316,36 @@ module.exports = (env) =>
           variables: variables
         }
         try
-          variables = @deviceManager._loadDevice(config, null, null)
+          state = @deviceManager._loadDevice(config, null, null)
           @deviceManager.addDeviceToConfig(config)
           env.logger.debug("Device \"#{variablesId}\" added to configuration of \"#{@id}\"")
         catch error
           env.logger.error(error)
+
+
+    ################################################
+    # update VariableDevice from runtime variables #
+    ################################################
+
+    _updateState: (reason) =>
+    # display the state variables defined elsewhere
+      @variables['time'] = new Date().format(@timeformat)
+      _ = { "time": @variables['time'], "state": @variables['state'].toUpperCase() }
+
+      trigger = @variables['trigger']
+      reject = @variables['reject']
+      error = @variables['error']
+
+      _.info =
+        if _.state is "ALERT" and trigger? then "[#{@deviceManager.getDeviceById(trigger).name}]"
+        else if _.state is "REJECTED" and reject? then "[#{@deviceManager.getDeviceById(reject).name}]"
+        else if _.state is "ERROR" and error? then "[#{error}]"
+        else if _.state is "ENABLED" then "[on]"
+        else if _.state is "DISABLED" then "[off]"
+        else ""
+
+      for k, v of _
+        @variableManager.setVariableToValue(@id + '-' + k, if v? then v else "")
+
 
   return plugin
