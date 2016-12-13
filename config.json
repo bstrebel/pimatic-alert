@@ -89,18 +89,8 @@
         }
       ],
       "id": "buttons-device",
-      "name": "buttons-device",
+      "name": "buttons device",
       "class": "ButtonsDevice"
-    },
-    {
-      "id": "prealert-switch",
-      "name": "prealert switch",
-      "class": "AlertSwitch"
-    },
-    {
-      "id": "alert-switch",
-      "name": "alert switch",
-      "class": "AlertSwitch"
     },
     {
       "id": "alert-remote",
@@ -119,18 +109,18 @@
     },
     {
       "id": "contact-sensor",
-      "name": "contact-sensor",
+      "name": "contact sensor",
       "class": "DummyContactSensor"
     },
     {
       "autoReset": true,
       "resetTime": 10000,
       "id": "presence-sensor",
-      "name": "presence-sensor",
+      "name": "presence sensor",
       "class": "DummyPresenceSensor"
     },
     {
-      "id": "prealert-system",
+      "id": "prealert",
       "name": "prealert system",
       "class": "AlertSystem",
       "sensors": [
@@ -142,10 +132,12 @@
       "switches": [
         "prealert-alarm"
       ],
-      "alert": "prealert-switch"
+      "trigger": true,
+      "alert": "prealert-switch",
+      "state": "prealert-state"
     },
     {
-      "id": "alert-system",
+      "id": "alert",
       "name": "alert system",
       "class": "AlertSystem",
       "sensors": [
@@ -157,8 +149,58 @@
       "switches": [
         "alert-alarm"
       ],
+      "remote": "alert-remote",
+      "trigger": false,
       "alert": "alert-switch",
-      "remote": "alert-remote"
+      "state": "alert-state"
+    },
+    {
+      "id": "prealert-switch",
+      "name": "prealert system switch",
+      "class": "AlertSwitch"
+    },
+    {
+      "id": "alert-switch",
+      "name": "alert system switch",
+      "class": "AlertSwitch"
+    },
+    {
+      "id": "prealert-state",
+      "name": "prealert system state",
+      "class": "VariablesDevice",
+      "variables": [
+        {
+          "name": "prealert-time",
+          "expression": "$prealert-time"
+        },
+        {
+          "name": "prealert-info",
+          "expression": "$prealert-info"
+        },
+        {
+          "name": "prealert-state",
+          "expression": "$prealert-state"
+        }
+      ]
+    },
+    {
+      "id": "alert-state",
+      "name": "alert system state",
+      "class": "VariablesDevice",
+      "variables": [
+        {
+          "name": "alert-time",
+          "expression": "$alert-time"
+        },
+        {
+          "name": "alert-info",
+          "expression": "$alert-info"
+        },
+        {
+          "name": "alert-state",
+          "expression": "$alert-state"
+        }
+      ]
     }
   ],
   "rules": [
@@ -190,7 +232,13 @@
       "name": "Favourites",
       "devices": [
         {
-          "deviceId": "alert-system"
+          "deviceId": "prealert"
+        },
+        {
+          "deviceId": "prealert-alarm"
+        },
+        {
+          "deviceId": "alert"
         },
         {
           "deviceId": "alert-remote"
@@ -202,13 +250,13 @@
           "deviceId": "alert-alarm"
         },
         {
-          "deviceId": "prealert-system"
+          "deviceId": "alert-state"
         },
         {
           "deviceId": "prealert-switch"
         },
         {
-          "deviceId": "prealert-alarm"
+          "deviceId": "prealert-state"
         },
         {
           "deviceId": "contact-sensor"
@@ -227,9 +275,10 @@
       "id": "prealert",
       "name": "prealert",
       "devices": [
-        "prealert-system",
+        "prealert",
         "prealert-switch",
-        "prealert-alarm"
+        "prealert-alarm",
+        "prealert-state"
       ],
       "rules": [],
       "variables": []
@@ -238,10 +287,11 @@
       "id": "alert",
       "name": "alert",
       "devices": [
-        "alert-system",
+        "alert",
         "alert-switch",
         "alert-alarm",
-        "alert-remote"
+        "alert-remote",
+        "alert-state"
       ],
       "rules": [],
       "variables": []
