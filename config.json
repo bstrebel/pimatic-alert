@@ -224,6 +224,13 @@
       "rule": "when contact-close is pressed then close contact-sensor",
       "active": true,
       "logging": false
+    },
+    {
+      "id": "alert",
+      "name": "alert",
+      "rule": "when alert-switch is turned on then log \"alert triggerd by $alert-trigger at $alert-time\" and turn alert-switch off after 1 minute",
+      "active": true,
+      "logging": true
     }
   ],
   "pages": [
