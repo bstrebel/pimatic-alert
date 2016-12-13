@@ -2,8 +2,6 @@ module.exports = (env) =>
 
   Promise = env.require 'bluebird'
   t = env.require('decl-api').types
-  _ = env.require 'lodash'
-
 
   class AlertPlugin extends env.plugins.Plugin
 
@@ -330,21 +328,21 @@ module.exports = (env) =>
     _updateState: (reason) =>
     # display the state variables defined elsewhere
       @variables['time'] = new Date().format(@timeformat)
-      _ = { "time": @variables['time'], "state": @variables['state'].toUpperCase() }
+      V = { "time": @variables['time'], "state": @variables['state'].toUpperCase() }
 
       trigger = @variables['trigger']
       reject = @variables['reject']
       error = @variables['error']
 
-      _.info =
-        if _.state is "ALERT" and trigger? then "[#{@deviceManager.getDeviceById(trigger).name}]"
-        else if _.state is "REJECTED" and reject? then "[#{@deviceManager.getDeviceById(reject).name}]"
-        else if _.state is "ERROR" and error? then "[#{error}]"
-        else if _.state is "ENABLED" then "[on]"
-        else if _.state is "DISABLED" then "[off]"
+      V.info =
+        if V.state is "ALERT" and trigger? then "[#{@deviceManager.getDeviceById(trigger).name}]"
+        else if V.state is "REJECTED" and reject? then "[#{@deviceManager.getDeviceById(reject).name}]"
+        else if V.state is "ERROR" and error? then "[#{error}]"
+        else if V.state is "ENABLED" then "[on]"
+        else if V.state is "DISABLED" then "[off]"
         else ""
 
-      for k, v of _
+      for k, v of V
         @variableManager.setVariableToValue(@id + '-' + k, if v? then v else "")
 
 
