@@ -9,7 +9,7 @@
     "device-config-schema.coffee",
     "LICENSE"
   ],
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": false,
   "configSchema": "alert-config-schema.coffee",
   "scripts": {},
@@ -34,6 +34,7 @@
     "homeduino",
     "sensor",
     "actuator",
+    "switch",
     "alarm"
   ],
   "author": "Bernd Strebel",
@@ -41,5 +42,5 @@
   "bugs": {
     "url": "https://github.com/bstrebel/pimatic-alert/issues"
   },
-  "homepage": "https://github.com/bstrebel/pimatic-alert#readme"
+  "homepage": "https://github.com/bstrebel/pimatic-alert"
 }
