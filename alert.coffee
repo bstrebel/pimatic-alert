@@ -159,11 +159,19 @@ module.exports = (env) =>
       if @_state
         if alert
           if device not instanceof env.devices.SwitchActuator
-            env.logger.info("Alert triggered by \"#{device.id}\"")
+
+            ####################################################
+            # strange: setVariable must be called to make sure #
+#           # that $alert-trigger is available for alert rule  #
+            ####################################################
+            @variableManager.setVariableToValue(@id + '-' + 'trigger', device.id)
+
             @variables['state'] = 'Alert'
             @variables['trigger'] = device.id
             @_updateState('alert')
+
             @_setTrigger(device.id)
+            env.logger.info("Alert triggered by \"#{device.id}\"")
         else
           env.logger.info("Alert switched off")
           @variables['state'] = 'Disabled'
@@ -257,7 +265,12 @@ module.exports = (env) =>
           else
             env.logger.error("Device \"#{actuator.id}\" is not a valid switch for \"#{@id}\"")
 
+      # adjust variable to initial state after initialization
       @variables['state'] = if @_state then "Enabled" else "Disabled"
+
+      # always turn off alert on system start
+      @setAlert(null, false)
+
       @_updateState('init')
 
     _checkSensors: () =>
