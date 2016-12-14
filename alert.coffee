@@ -79,6 +79,7 @@ module.exports = (env) =>
       @remote = null
       @rejected = false
       @rfDelay = if @config.rfdelay then @config.rfdelay else 500
+      @sensorAlert = false
 
       @variables = {
         time: null    # timestamp of the last update
@@ -164,6 +165,7 @@ module.exports = (env) =>
     ###############################################################################################
 
     setAlert: (device, alert) =>
+
       # called indirect by sensor devices via event handler
       # and from alert system device to switch off the alert
 
@@ -171,24 +173,30 @@ module.exports = (env) =>
         .then((state) =>
           if alert
             if device not instanceof env.devices.SwitchActuator
+              env.logger.info("Alert triggered by sensor \"#{device.id}\"")
               ####################################################
               # strange: setVariable must be called to make sure #
               # that $alert-trigger is available for alert rule  #
               ####################################################
               @variableManager.setVariableToValue(@id + '-' + 'trigger', device.id)
-
               @variables['state'] = 'Alert'
               @variables['trigger'] = device.id
               @_updateState('alert')
-
               @_setTrigger(device.id)
-              env.logger.info("Alert triggered by \"#{device.id}\"")
+              @sensorAlert = true
+              @_switchDevices(alert)
+            else
+              if @sensorAlert
+                env.logger.debug("Alert from \"#{device.id}\" ignored")
+                @sensorAlert = false
+              else
+                env.logger.info("Alert triggered by switch \"#{device.id}\"")
+                @_switchDevices(alert)
           else
             env.logger.info("Alert switched off")
             @variables['state'] = 'Disabled'
             @_setTrigger(null)
-
-          @_switchDevices(alert)
+            @_switchDevices(alert)
       )
 
     ################################################
@@ -196,8 +204,8 @@ module.exports = (env) =>
     #  because auf device recreation               #
     ################################################
 
-  alertHandler = (state) ->
-    if not state
+    alertHandler = (state) ->
+      # if not state
       @system.setAlert(this, state)
 
     remoteHandler = (state) ->
