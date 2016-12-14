@@ -196,7 +196,8 @@ module.exports = (env) =>
     #  because auf device recreation               #
     ################################################
 
-    alertHandler = (state) ->
+  alertHandler = (state) ->
+    if not state
       @system.setAlert(this, state)
 
     remoteHandler = (state) ->
