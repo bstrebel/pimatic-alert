@@ -78,6 +78,7 @@ module.exports = (env) =>
       @alert = null
       @remote = null
       @rejected = false
+      @rfDelay = if @config.rfdelay then @config.rfdelay else 500
 
       @variables = {
         time: null    # timestamp of the last update
@@ -121,13 +122,9 @@ module.exports = (env) =>
             env.logger.debug("Alert system \"#{@id}\" enabled")
         else
           if not @rejected
+            @_switchDevices(false)
             @variables['state'] = "Disabled"
             @variables['trigger'] = null
-            # always switch off alert if system is disabled
-            if @switches?
-              @alert?.changeStateTo(state)
-              for actuator in @switches
-                actuator?.changeStateTo(state)
             @_setTrigger("")
             env.logger.debug("Alert system \"#{@id}\" disabled")
 
@@ -190,8 +187,7 @@ module.exports = (env) =>
           @variables['state'] = 'Disabled'
           @_setTrigger(null)
 
-        for actuator in @switches
-          actuator.changeStateTo(alert)
+        @_switchDevices(alert)
 
     ################################################
     #  named removeable(!) alert handlers required #
@@ -283,7 +279,7 @@ module.exports = (env) =>
             env.logger.error("Device \"#{actuator.id}\" is not a valid switch for \"#{@id}\"")
 
       # always turn off alert on system start
-      @setAlert(null, false)
+      @_switchDevices(false)
 
       # adjust variable to initial state after initialization
       @variables['state'] = if @_state then "Enabled" else "Disabled"
@@ -372,6 +368,27 @@ module.exports = (env) =>
 
       for k, v of V
         @variableManager.setVariableToValue(@id + '-' + k, if v? then v else "")
+
+    ##################################################
+    # delayed switching of HomeduinoRFSwitch devices #
+    ##################################################
+
+    _switchDevices: (state) =>
+
+      timeout = 0
+
+      if @switches?
+        for actuator in @switches
+          # TODO: check against HomeduinoRFSwitch
+          env.logger.debug("Switching device \"#{actuator.id}\" => #{if state then 'ON' else 'OFF'}")
+          if actuator instanceof env.devices.DummySwitch
+            actuator.changeStateTo(state)
+          else
+            timeout += @rfDelay
+            env.logger.debug("Switching device \"#{actuator.id}\" delayed #{timout} ms!")
+            setTimeout((->
+              actuator.changeStateTo(state)), timeout)
+      return true
 
 
   return plugin

@@ -50,4 +50,8 @@ module.exports = {
         description: "Generate default switch devices and variables"
         type: "boolean"
         default: true
+      rfdelay:
+        description: "Delay switching of HomuduinoRFSwitch for rfdelay ms"
+        type: "number"
+        default: "250"
 }
