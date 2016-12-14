@@ -101,7 +101,8 @@ module.exports = (env) =>
       @on 'rejected', () =>
         # switch back to "off" immediately after we resolved the state change
         env.logger.debug("Alert system \"#{@id}\" activation rejected")
-        @getState().then( (state) => @changeStateTo(false) )
+        @getState()
+          .finally( (state) => @changeStateTo(false) )
 
       @on 'state', (state) =>
         # process system switch state changes
