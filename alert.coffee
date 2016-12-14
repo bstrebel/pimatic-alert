@@ -53,10 +53,16 @@ module.exports = (env) =>
       @_trigger = if trigger? then @_trigger = trigger else @_trigger = ""
       @emit 'trigger', @_trigger if @displayTrigger
 
+    ###############################################################################################
+    ###############################################################################################
 
     constructor: (config, lastState, plugin) ->
 
       super(config, lastState)
+
+      @id = @config.id
+      @name = @config.name
+
       @config = config
       @plugin = plugin
 
@@ -82,6 +88,15 @@ module.exports = (env) =>
         error: null   # error message
       }
 
+      if @plugin.afterInit()
+        # initialize only on recreation of the device
+        # skip initialization if we are called the
+        # first time during startup
+        @_initDevice('constructor')
+
+      ###############################
+      # AlertSwitch event listeners #
+      ###############################
 
       @on 'rejected', () =>
         # switch back to "off" immediately after we resolved the state change
@@ -122,14 +137,8 @@ module.exports = (env) =>
         # until all devices are loaded
         @_initDevice('after init')
 
-      if @plugin.afterInit()
-        # initialize only on recreation of the device
-        # skip if we are called the first time during
-        # startup
-        @_initDevice('constructor')
-      else
-        # autoconfiguration of option is set
-        @_autoConfig() if @config.autoconfig
+    ###############################################################################################
+    ###############################################################################################
 
     destroy: () ->
       # remove event handlers from sensor devices
@@ -152,6 +161,9 @@ module.exports = (env) =>
           else
             env.logger.error("Invalid sensor type found in alert system \"#{@id}\"")
       super()
+
+    ###############################################################################################
+    ###############################################################################################
 
     setAlert: (device, alert) =>
       # called indirect by sensor devices via event handler
@@ -202,6 +214,10 @@ module.exports = (env) =>
     _initDevice: (event) =>
 
       env.logger.debug("Initializing alert system \"#{@id}\" from [#{event}]")
+
+      @config.alert = if @config.alert == '<auto>' then null else @config.alert
+      @config.state = if @config.state == '<auto>' then null else @config.state
+      @_autoConfig() if @config.autoconfig
 
       @sensors = []
       @switches = []
@@ -265,12 +281,11 @@ module.exports = (env) =>
           else
             env.logger.error("Device \"#{actuator.id}\" is not a valid switch for \"#{@id}\"")
 
-      # adjust variable to initial state after initialization
-      @variables['state'] = if @_state then "Enabled" else "Disabled"
-
       # always turn off alert on system start
       @setAlert(null, false)
 
+      # adjust variable to initial state after initialization
+      @variables['state'] = if @_state then "Enabled" else "Disabled"
       @_updateState('init')
 
     _checkSensors: () =>
@@ -289,47 +304,46 @@ module.exports = (env) =>
 
     _autoConfig: () =>
 
+      env.logger.debug("Running autoConfig for \"#{@config.id}\" ...")
+
       # AlertSwitch device
-      alertId = if @config.alert? not '' then @config.alert else @id + '-switch'
+      alertId = if !!@config.alert then @config.alert else @config.id + '-switch'
       @config.alert = alertId
       if not @deviceManager.isDeviceInConfig(alertId)
         config = {
           id: alertId
-          name: "#{@name} switch"
+          name: "#{@config.name} switch"
           class: "AlertSwitch"
         }
         try
           alert = @deviceManager._loadDevice(config, null, null)
           @deviceManager.addDeviceToConfig(config)
-          env.logger.debug("Device \"#{alertId}\" added to configuration of \"#{@id}\"")
+          env.logger.debug("Device \"#{alertId}\" added to configuration of \"#{@config.id}\"")
         catch error
           env.logger.error(error)
 
       # AlertSystem variable device setup
       variables = []
-      for suffix, value of @variables
-        name = @id + '-' + suffix
-        if not @variableManager.isVariableDefined(name)
-          @variableManager.addVariable(name, "value", "")
-
+      for suffix in ["time", "info", "state"]
+        name = @config.id + '-' + suffix
         variables.push({
           name: name
           expression: '$' + name
-        }) if suffix in ["time", "info", "state"]
+        })
 
-      variablesId = if @config.variables? not '' then @config.variables else @id + '-state'
-      @config.state = variablesId
-      if not @deviceManager.isDeviceInConfig(variablesId)
+      stateId = if !!@config.state then @config.state else @config.id + '-state'
+      @config.state = stateId
+      if not @deviceManager.isDeviceInConfig(stateId)
         config = {
-          id: variablesId,
-          name: "#{@name} state"
+          id: stateId,
+          name: "#{@config.name} state"
           class: "VariablesDevice"
           variables: variables
         }
         try
           state = @deviceManager._loadDevice(config, null, null)
           @deviceManager.addDeviceToConfig(config)
-          env.logger.debug("Device \"#{variablesId}\" added to configuration of \"#{@id}\"")
+          env.logger.debug("Device \"#{stateId}\" added to configuration of \"#{@config.id}\"")
         catch error
           env.logger.error(error)
 
