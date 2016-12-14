@@ -166,28 +166,30 @@ module.exports = (env) =>
     setAlert: (device, alert) =>
       # called indirect by sensor devices via event handler
       # and from alert system device to switch off the alert
-      if @_state
-        if alert
-          if device not instanceof env.devices.SwitchActuator
 
-            ####################################################
-            # strange: setVariable must be called to make sure #
-#           # that $alert-trigger is available for alert rule  #
-            ####################################################
-            @variableManager.setVariableToValue(@id + '-' + 'trigger', device.id)
+      @getState()
+        .then((state) =>
+          if alert
+            if device not instanceof env.devices.SwitchActuator
+              ####################################################
+              # strange: setVariable must be called to make sure #
+              # that $alert-trigger is available for alert rule  #
+              ####################################################
+              @variableManager.setVariableToValue(@id + '-' + 'trigger', device.id)
 
-            @variables['state'] = 'Alert'
-            @variables['trigger'] = device.id
-            @_updateState('alert')
+              @variables['state'] = 'Alert'
+              @variables['trigger'] = device.id
+              @_updateState('alert')
 
-            @_setTrigger(device.id)
-            env.logger.info("Alert triggered by \"#{device.id}\"")
-        else
-          env.logger.info("Alert switched off")
-          @variables['state'] = 'Disabled'
-          @_setTrigger(null)
+              @_setTrigger(device.id)
+              env.logger.info("Alert triggered by \"#{device.id}\"")
+          else
+            env.logger.info("Alert switched off")
+            @variables['state'] = 'Disabled'
+            @_setTrigger(null)
 
-        @_switchDevices(alert)
+          @_switchDevices(alert)
+      )
 
     ################################################
     #  named removeable(!) alert handlers required #
