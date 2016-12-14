@@ -10,33 +10,6 @@ module.exports = {
     type: "object"
     extensions: ["xLink", "xConfirm", "xOnLabel", "xOffLabel"]
     properties:
-      remote:
-        description: "Optional remote control switch"
-        type: "string"
-        default: ""
-      autoconfig:
-        description: "Generate default switch devices and variables"
-        type: "boolean"
-        default: true
-      trigger:
-        description: "Display trigger device on alert system switch"
-        type: "boolean"
-        default: false
-      alert:
-        description: "Alert switch"
-        type: "string"
-        default: ""
-      state:
-        description: "Alert system variable device"
-        type: "string"
-        default: ""
-      switches:
-        description: "List of switch devices"
-        type: "array"
-        default: []
-        items:
-          description: "Switch ID"
-          type: "string"
       sensors:
         description: "List of sensor devices"
         type: "array"
@@ -51,5 +24,30 @@ module.exports = {
             required:
               description: "Required to enable alert system"
               type: "boolean"
-              default: true
+      switches:
+        description: "List of switch devices"
+        type: "array"
+        default: []
+        items:
+          description: "Switch ID"
+          type: "string"
+      remote:
+        description: "Optional remote control switch"
+        type: "string"
+      alert:
+        description: "AlertSwitch device"
+        type: "string"
+        default: '<auto>'
+      state:
+        description: "Alert system VariablesDevice"
+        type: "string"
+        default: '<auto>'
+      trigger:
+        description: "Display trigger device on alert system switch"
+        type: "boolean"
+        default: false
+      autoconfig:
+        description: "Generate default switch devices and variables"
+        type: "boolean"
+        default: true
 }
