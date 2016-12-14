@@ -120,53 +120,13 @@
       "class": "DummyPresenceSensor"
     },
     {
-      "id": "prealert",
-      "name": "prealert system",
-      "class": "AlertSystem",
-      "sensors": [
-        {
-          "name": "presence-sensor",
-          "required": false
-        }
-      ],
-      "switches": [
-        "prealert-alarm"
-      ],
-      "trigger": true,
-      "alert": "prealert-switch",
-      "state": "prealert-state"
-    },
-    {
-      "id": "alert",
-      "name": "alert system",
-      "class": "AlertSystem",
-      "sensors": [
-        {
-          "name": "contact-sensor",
-          "required": true
-        }
-      ],
-      "switches": [
-        "alert-alarm"
-      ],
-      "remote": "alert-remote",
-      "trigger": false,
-      "alert": "alert-switch",
-      "state": "alert-state"
-    },
-    {
       "id": "prealert-switch",
-      "name": "prealert system switch",
-      "class": "AlertSwitch"
-    },
-    {
-      "id": "alert-switch",
-      "name": "alert system switch",
+      "name": "prealert switch",
       "class": "AlertSwitch"
     },
     {
       "id": "prealert-state",
-      "name": "prealert system state",
+      "name": "prealert state",
       "class": "VariablesDevice",
       "variables": [
         {
@@ -184,8 +144,30 @@
       ]
     },
     {
+      "sensors": [
+        {
+          "name": "presence-sensor",
+          "required": false
+        }
+      ],
+      "switches": [
+        "prealert-alarm"
+      ],
+      "remote": "",
+      "id": "prealert",
+      "name": "prealert",
+      "class": "AlertSystem",
+      "alert": "prealert-switch",
+      "state": "prealert-state"
+    },
+    {
+      "id": "alert-switch",
+      "name": "alert switch",
+      "class": "AlertSwitch"
+    },
+    {
       "id": "alert-state",
-      "name": "alert system state",
+      "name": "alert state",
       "class": "VariablesDevice",
       "variables": [
         {
@@ -201,6 +183,23 @@
           "expression": "$alert-state"
         }
       ]
+    },
+    {
+      "sensors": [
+        {
+          "name": "contact-sensor",
+          "required": true
+        }
+      ],
+      "switches": [
+        "alert-alarm"
+      ],
+      "remote": "alert-remote",
+      "id": "alert",
+      "name": "alert",
+      "class": "AlertSystem",
+      "alert": "alert-switch",
+      "state": "alert-state"
     }
   ],
   "rules": [
@@ -224,13 +223,6 @@
       "rule": "when contact-close is pressed then close contact-sensor",
       "active": true,
       "logging": false
-    },
-    {
-      "id": "alert",
-      "name": "alert",
-      "rule": "when alert-switch is turned on then log \"alert triggerd by $alert-trigger at $alert-time\" and turn alert-switch off after 1 minute",
-      "active": true,
-      "logging": true
     }
   ],
   "pages": [
@@ -239,16 +231,10 @@
       "name": "Favourites",
       "devices": [
         {
-          "deviceId": "prealert"
+          "deviceId": "prealert-switch"
         },
         {
           "deviceId": "prealert-alarm"
-        },
-        {
-          "deviceId": "alert"
-        },
-        {
-          "deviceId": "alert-remote"
         },
         {
           "deviceId": "alert-switch"
@@ -257,10 +243,16 @@
           "deviceId": "alert-alarm"
         },
         {
+          "deviceId": "alert-remote"
+        },
+        {
+          "deviceId": "alert"
+        },
+        {
           "deviceId": "alert-state"
         },
         {
-          "deviceId": "prealert-switch"
+          "deviceId": "prealert"
         },
         {
           "deviceId": "prealert-state"
@@ -283,8 +275,6 @@
       "name": "prealert",
       "devices": [
         "prealert",
-        "prealert-switch",
-        "prealert-alarm",
         "prealert-state"
       ],
       "rules": [],
@@ -295,9 +285,6 @@
       "name": "alert",
       "devices": [
         "alert",
-        "alert-switch",
-        "alert-alarm",
-        "alert-remote",
         "alert-state"
       ],
       "rules": [],
@@ -310,6 +297,19 @@
         "contact-sensor",
         "presence-sensor",
         "buttons-device"
+      ],
+      "rules": [],
+      "variables": []
+    },
+    {
+      "id": "debug",
+      "name": "debug",
+      "devices": [
+        "prealert-switch",
+        "prealert-alarm",
+        "alert-switch",
+        "alert-alarm",
+        "alert-remote"
       ],
       "rules": [],
       "variables": []
@@ -342,5 +342,38 @@
       }
     }
   ],
-  "variables": []
+  "variables": [
+    {
+      "name": "alert-time",
+      "value": "2016-12-14 04:26:32"
+    },
+    {
+      "name": "alert-state",
+      "value": "ENABLED"
+    },
+    {
+      "name": "alert-info",
+      "value": "[on]"
+    },
+    {
+      "name": "prealert-time",
+      "value": "2016-12-14 04:35:06"
+    },
+    {
+      "name": "prealert-state",
+      "value": "ALERT"
+    },
+    {
+      "name": "prealert-info",
+      "value": "[presence sensor]"
+    },
+    {
+      "name": "alert-trigger",
+      "value": "contact-sensor"
+    },
+    {
+      "name": "prealert-trigger",
+      "value": "presence-sensor"
+    }
+  ]
 }

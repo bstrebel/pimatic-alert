@@ -17,7 +17,7 @@ Once you setup the alert system you can easily react on alert events
 with simple rules like:
 
 ```
-when alert-switch is turned on then log "alert triggerd by
+when alert-switch is turned on then log "alert triggered by
 $alert-trigger at $alert-time" and turn alert-switch off after 5 minutes
 ```
 An alert system is build from the following components:
@@ -30,16 +30,15 @@ An alert system is build from the following components:
 - Rules to do something when an alert is triggered
 
 The alert switch as well as some runtime variables are generated
-automatically in the background with the following IDs (where ALERT
+automatically in the background with the following IDs (where _ALERT_
 stands for the ID of the AlertSystem device):
 
-- ALERT-**switch**: the AlertSwitch device
-- ALERT-**state**: VariablesDevice to be used in the frontend
-
-- $ALERT-**trigger**: the device that triggerd the alert
-- $ALERT-**time**: the timestamp of the last update
-- $ALERT-**reject**: device that caused a rejection (see below)
-- $ALERT-**error**: some error descriptions
+- _ALERT_-**switch**: the AlertSwitch device
+- _ALERT_-**state**: VariablesDevice to be used in the frontend
+- **$**_ALERT_-**trigger**: the device that triggerd the alert
+- **$**_ALERT_-**time**: the timestamp of the last update
+- **$**_ALERT_-**reject**: device that caused a rejection (see below)
+- **$**_ALERT_-**error**: some error descriptions
 
 In adition their are some optional properties which may be useful for
 your environment:
@@ -88,33 +87,6 @@ generate required devices and runtime variables in the background.
     type: "object"
     extensions: ["xLink", "xConfirm", "xOnLabel", "xOffLabel"]
     properties:
-      remote:
-        description: "Optional remote control switch"
-        type: "string"
-        default: ""
-      autoconfig:
-        description: "Generate default switch devices and variables"
-        type: "boolean"
-        default: true
-      trigger:
-        description: "Display trigger device on alert system switch"
-        type: "boolean"
-        default: false
-      alert:
-        description: "Alert switch"
-        type: "string"
-        default: ""
-      state:
-        description: "Alert system variable device"
-        type: "string"
-        default: ""
-      switches:
-        description: "List of switch devices"
-        type: "array"
-        default: []
-        items:
-          description: "Switch ID"
-          type: "string"
       sensors:
         description: "List of sensor devices"
         type: "array"
@@ -129,5 +101,30 @@ generate required devices and runtime variables in the background.
             required:
               description: "Required to enable alert system"
               type: "boolean"
-              default: true
+      switches:
+        description: "List of switch devices"
+        type: "array"
+        default: []
+        items:
+          description: "Switch ID"
+          type: "string"
+      remote:
+        description: "Optional remote control switch"
+        type: "string"
+      alert:
+        description: "AlertSwitch device"
+        type: "string"
+        default: '<auto>'
+      state:
+        description: "Alert system VariablesDevice"
+        type: "string"
+        default: '<auto>'
+      trigger:
+        description: "Display trigger device on alert system switch"
+        type: "boolean"
+        default: false
+      autoconfig:
+        description: "Generate default switch devices and variables"
+        type: "boolean"
+        default: true
 ```
