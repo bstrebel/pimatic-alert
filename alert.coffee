@@ -172,32 +172,33 @@ module.exports = (env) =>
 
       @getState()
         .then((state) =>
-          if alert
-            if device not instanceof env.devices.SwitchActuator
-              env.logger.info("Alert triggered by sensor \"#{device.id}\"")
-              ####################################################
-              # strange: setVariable must be called to make sure #
-              # that $alert-trigger is available for alert rule  #
-              ####################################################
-              @variableManager.setVariableToValue(@id + '-' + 'trigger', device.id)
-              @variables['state'] = 'Alert'
-              @variables['trigger'] = device.id
-              @_updateState('alert')
-              @_setTrigger(device.id)
-              @sensorAlert = true
-              @_switchDevices(alert)
-            else
-              if @sensorAlert
-                env.logger.debug("Alert from \"#{device.id}\" ignored")
-                @sensorAlert = false
-              else
-                env.logger.info("Alert triggered by switch \"#{device.id}\"")
+          if state
+            if alert
+              if device not instanceof env.devices.SwitchActuator
+                env.logger.info("Alert triggered by sensor \"#{device.id}\"")
+                ####################################################
+                # strange: setVariable must be called to make sure #
+                # that $alert-trigger is available for alert rule  #
+                ####################################################
+                @variableManager.setVariableToValue(@id + '-' + 'trigger', device.id)
+                @variables['state'] = 'Alert'
+                @variables['trigger'] = device.id
+                @_updateState('alert')
+                @_setTrigger(device.id)
+                @sensorAlert = true
                 @_switchDevices(alert)
-          else
-            env.logger.info("Alert switched off")
-            @variables['state'] = 'Disabled'
-            @_setTrigger(null)
-            @_switchDevices(alert)
+              else
+                if @sensorAlert
+                  env.logger.debug("Alert from \"#{device.id}\" ignored")
+                  @sensorAlert = false
+                else
+                  env.logger.info("Alert triggered by switch \"#{device.id}\"")
+                  @_switchDevices(alert)
+            else
+              env.logger.info("Alert switched off")
+              @variables['state'] = 'Disabled'
+              @_setTrigger(null)
+              @_switchDevices(alert)
       )
 
     ################################################
