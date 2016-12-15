@@ -105,7 +105,8 @@ module.exports = (env) =>
         # switch back to "off" immediately after we resolved the state change
         env.logger.debug("Alert system \"#{@id}\" activation rejected")
         @getState()
-          .finally( (state) => @changeStateTo(false) )
+          .then( (state) => setTimeout((=>
+            @changeStateTo(false)), 100))
 
       @on 'state', (state) =>
         # process system switch state changes
@@ -265,7 +266,7 @@ module.exports = (env) =>
         @sensors.push(sensor)
 
         sensor.system = @
-        sensor.required = if required? then '_' + event else null
+        sensor.required = if required then '_' + event else null
         sensor.expectedValue = expectedValue
         sensor.on event, sensorHandler
 
