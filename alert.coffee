@@ -113,12 +113,11 @@ module.exports = (env) =>
         # sync with optional remote switch
         @remote.changeStateTo(state) if @remote?
         if state
-          if not @_checkSensors()
+          @rejected = not @_checkSensors()
+          if @rejected
             @variables['state'] = "Rejected"
-            @rejected = true
             @emit 'rejected'
           else
-            @rejected = false
             @variables['state'] = "Enabled"
             @variables['trigger'] = null
             env.logger.debug("Alert system \"#{@id}\" enabled")
@@ -300,18 +299,23 @@ module.exports = (env) =>
 
     _checkSensors: () =>
 
-      # TODO: needs further testing in live environment
-      if not @checksensors
+      # TODO: needs further testing in production environment
+      if @checkSensors
+        for sensor in @sensors
+          if sensor.required?
+            if sensor[sensor.required] == sensor.expectedValue
+              env.logger.info("Device #{sensor.id} not ready for alert system \"#{@id}\"")
+              @variables['reject'] = sensor.id
+              return false
+
+        # all devices checked for a valid state
+        @variables['reject'] = null
         return true
 
-      for sensor in @sensors
-        if sensor.required?
-          if sensor[sensor.required] == sensor.expectedValue
-            @variables['reject'] = sensor.id
-            env.logger.info("Device #{sensor.id} not ready for alert system \"#{@id}\"")
-            return false
-      @variables['reject'] = null
-      return true
+      else
+        env.logger.debug("Sensor checks disabled for \"#{@id}\"")
+        @variables['reject'] = null
+        return true
 
     #####################################################
     # dynamic creation of devices and runtime vatiabled #
