@@ -300,7 +300,8 @@ module.exports = (env) =>
     _checkSensors: () =>
 
       # TODO: needs further testing in live environment
-      return unless @checksensors
+      if not @checksensors
+        return true
 
       for sensor in @sensors
         if sensor.required?
