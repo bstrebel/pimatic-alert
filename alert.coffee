@@ -396,7 +396,7 @@ module.exports = (env) =>
             actuator.changeStateTo(state)
           else
             timeout += @rfDelay
-            env.logger.debug("Switching device \"#{actuator.id}\" delayed #{timout} ms!")
+            env.logger.debug("Switching device \"#{actuator.id}\" delayed #{timeout} ms!")
             setTimeout((->
               actuator.changeStateTo(state)), timeout)
       return true
