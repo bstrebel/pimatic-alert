@@ -59,4 +59,8 @@ module.exports = {
         description: "Enable/Disable sensor checking on activation"
         type: "boolean"
         default: false
+      rejectdelay:
+        description: "Delay before resetting the AlertSwitch after rejection"
+        type: "number"
+        default: 1000
 }

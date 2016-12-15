@@ -6,7 +6,6 @@ module.exports = (env) =>
   class AlertPlugin extends env.plugins.Plugin
 
     init: (app, @framework, @config) =>
-      env.logger.info "Starting alert system ..."
 
       @_afterInit = false
 
@@ -56,6 +55,12 @@ module.exports = (env) =>
     ###############################################################################################
     ###############################################################################################
 
+    log: (level, msg) =>
+      env.logger[level]("[#{@config.id}] #{msg}")
+
+    ###############################################################################################
+    ###############################################################################################
+
     constructor: (config, lastState, plugin) ->
 
       super(config, lastState)
@@ -79,7 +84,8 @@ module.exports = (env) =>
       @remote = null
       @rejected = false
       @rfDelay = if @config.rfdelay then @config.rfdelay else 500
-      @checkSensors = @config.checksensors
+      @rejectdelay = if @config.rejectdelay then @config.rejectdelay else 1000
+      @checksensors = @config.checkSensors
       @sensorAlert = false
 
       @variables = {
@@ -103,10 +109,10 @@ module.exports = (env) =>
 
       @on 'rejected', () =>
         # switch back to "off" immediately after we resolved the state change
-        env.logger.debug("Alert system \"#{@id}\" activation rejected")
+        @log('debug', "Activation rejected")
         @getState()
           .then( (state) => setTimeout((=>
-            @changeStateTo(false)), 100))
+            @changeStateTo(false)), @rejectDelay))
 
       @on 'state', (state) =>
         # process system switch state changes
@@ -121,14 +127,14 @@ module.exports = (env) =>
           else
             @variables['state'] = "Enabled"
             @variables['trigger'] = null
-            env.logger.debug("Alert system \"#{@id}\" enabled")
+            @log('debug', "Alert system enabled")
         else
           if not @rejected
             @_switchDevices(false)
             @variables['state'] = "Disabled"
             @variables['trigger'] = null
             @_setTrigger("")
-            env.logger.debug("Alert system \"#{@id}\" disabled")
+            @log('debug', "Alert system disabled")
 
         @_updateState('state')
 
@@ -142,7 +148,7 @@ module.exports = (env) =>
 
     destroy: () ->
       # remove event handlers from sensor devices
-      env.logger.debug("Destroying alert system \"#{@id}\"")
+      @log('debug', "Destroying alert system")
       if @alert?
         @alert.removeListener 'state', alertHandler
         delete(@alert.system)
@@ -159,7 +165,7 @@ module.exports = (env) =>
           else if sensor instanceof env.devices.ContactSensor
             sensor.removeListener 'contact', sensorHandler
           else
-            env.logger.error("Invalid sensor type found in alert system \"#{@id}\"")
+            @log('error', "Invalid sensor type found for \"#{sensor.id}\"")
       super()
 
     ###############################################################################################
@@ -175,7 +181,7 @@ module.exports = (env) =>
           if state
             if alert
               if device not instanceof env.devices.SwitchActuator
-                env.logger.info("Alert triggered by sensor \"#{device.id}\"")
+                @log('info', "Alert triggered by sensor \"#{device.id}\"")
                 ####################################################
                 # strange: setVariable must be called to make sure #
                 # that $alert-trigger is available for alert rule  #
@@ -189,13 +195,13 @@ module.exports = (env) =>
                 @_switchDevices(alert)
               else
                 if @sensorAlert
-                  env.logger.debug("Alert from \"#{device.id}\" ignored")
+                  @log('debug', "Alert from \"#{device.id}\" ignored")
                   @sensorAlert = false
                 else
-                  env.logger.info("Alert triggered by switch \"#{device.id}\"")
+                  @log('info', "Alert triggered by switch \"#{device.id}\"")
                   @_switchDevices(alert)
             else
-              env.logger.info("Alert switched off")
+              @log('info', "Alert switched off")
               @variables['state'] = 'Disabled'
               @_setTrigger(null)
               @_switchDevices(alert)
@@ -223,7 +229,8 @@ module.exports = (env) =>
 
     _initDevice: (event) =>
 
-      env.logger.debug("Initializing alert system \"#{@id}\" from [#{event}]")
+      @log('debug', "Initializing from [#{event}]")
+
 
       @config.alert = if @config.alert == '<auto>' then null else @config.alert
       @config.state = if @config.state == '<auto>' then null else @config.state
@@ -237,11 +244,11 @@ module.exports = (env) =>
       @variables['state'] = "Error"
 
       if not @config.alert?
-        env.logger.error("Missing alert switch in configuration for \"#{@id}\"")
+        @log('error', "Missing alert switch in configuration")
         return
       alert = @deviceManager.getDeviceById(@config.alert)
       if alert not instanceof AlertSwitch
-        env.logger.error("Device \"#{alert.id}\" is not a valid alert switch for \"#{@id}\"")
+        @log('error', "Device \"#{alert.id}\" is not a valid alert switch")
         return
 
       alert.system = @
@@ -250,19 +257,19 @@ module.exports = (env) =>
       @alert = alert
       @switches.push(alert)
 
-      env.logger.debug("Device \"#{alert.id}\" registered as alert switch device for \"#{@id}\"")
+      @log('debug', "Device \"#{alert.id}\" registered as alert switch device")
 
       if @config.remote?
         remote = @deviceManager.getDeviceById(@config.remote)
         if remote?
           @remote = remote
-          env.logger.debug("Device \"#{remote.id}\" registered as remote device for \"#{@id}\"")
+          @log('debug', "Device \"#{remote.id}\" registered as remote device")
 
           remote.system = @
           remote.on 'state', remoteHandler
 
       register = (sensor, event, expectedValue, required) =>
-        env.logger.debug("Device \"#{sensor.id}\" registered as sensor for \"#{@id}\"")
+        @log('debug', "Device \"#{sensor.id}\" registered as sensor")
         @sensors.push(sensor)
 
         sensor.system = @
@@ -278,18 +285,18 @@ module.exports = (env) =>
           else if sensor instanceof env.devices.ContactSensor
             register sensor, 'contact', false, item.required
           else
-            env.logger.error("Device \"#{sensor.id}\" is not a valid sensor for \"#{@id}\"")
+            @log('error', "Device \"#{sensor.id}\" is not a valid sensor")
         else
-          env.logger.error("Device \"#{id}\" not found for \"#{@id}\"")
+          @log('error', "Device \"#{id}\" not found")
 
       for id in @config.switches
         actuator = @deviceManager.getDeviceById(id)
         if actuator?
           if actuator instanceof env.devices.SwitchActuator
             @switches.push(actuator)
-            env.logger.debug("Device \"#{actuator.id}\" registerd as switch for \"#{@id}\"")
+            @log('debug', "Device \"#{actuator.id}\" registerd as switch")
           else
-            env.logger.error("Device \"#{actuator.id}\" is not a valid switch for \"#{@id}\"")
+            @log('error', "Device \"#{actuator.id}\" is not a valid switch")
 
       # always turn off alert on system start
       @_switchDevices(false)
@@ -305,7 +312,7 @@ module.exports = (env) =>
         for sensor in @sensors
           if sensor.required?
             if sensor[sensor.required] == sensor.expectedValue
-              env.logger.info("Device #{sensor.id} not ready for alert system \"#{@id}\"")
+              @log('info', "Device #{sensor.id} not ready for activation")
               @variables['reject'] = sensor.id
               return false
 
@@ -314,7 +321,7 @@ module.exports = (env) =>
         return true
 
       else
-        env.logger.debug("Sensor checks disabled for \"#{@id}\"")
+        @log('debug', "Sensor checks disabled")
         @variables['reject'] = null
         return true
 
@@ -324,7 +331,7 @@ module.exports = (env) =>
 
     _autoConfig: () =>
 
-      env.logger.debug("Running autoConfig for \"#{@config.id}\" ...")
+      @log('debug', "Running autoConfig ...")
 
       # AlertSwitch device
       alertId = if !!@config.alert then @config.alert else @config.id + '-switch'
@@ -338,9 +345,9 @@ module.exports = (env) =>
         try
           alert = @deviceManager._loadDevice(config, null, null)
           @deviceManager.addDeviceToConfig(config)
-          env.logger.debug("Device \"#{alertId}\" added to configuration of \"#{@config.id}\"")
+          @log('debug', "Device \"#{alertId}\" added to configuration")
         catch error
-          env.logger.error(error)
+          @log('error', error)
 
       # AlertSystem variable device setup
       variables = []
@@ -363,9 +370,9 @@ module.exports = (env) =>
         try
           state = @deviceManager._loadDevice(config, null, null)
           @deviceManager.addDeviceToConfig(config)
-          env.logger.debug("Device \"#{stateId}\" added to configuration of \"#{@config.id}\"")
+          @log('debug', "Device \"#{stateId}\" added to configuration")
         catch error
-          env.logger.error(error)
+          @log('error', error)
 
 
     ################################################
@@ -403,12 +410,12 @@ module.exports = (env) =>
       if @switches?
         for actuator in @switches
           # TODO: check against HomeduinoRFSwitch
-          env.logger.debug("Switching device \"#{actuator.id}\" => #{if state then 'ON' else 'OFF'}")
+          @log('debug', "Switching device \"#{actuator.id}\" => #{if state then 'ON' else 'OFF'}")
           if actuator instanceof env.devices.DummySwitch
             actuator.changeStateTo(state)
           else
             timeout += @rfDelay
-            env.logger.debug("Switching device \"#{actuator.id}\" delayed #{timeout} ms!")
+            @log('debug', "Switching device \"#{actuator.id}\" delayed #{timeout} ms!")
             setTimeout((->
               actuator.changeStateTo(state)), timeout)
       return true
