@@ -9,7 +9,7 @@
     "device-config-schema.coffee",
     "LICENSE"
   ],
-  "version": "0.2.5",
+  "version": "0.2.6",
   "private": false,
   "configSchema": "alert-config-schema.coffee",
   "scripts": {},

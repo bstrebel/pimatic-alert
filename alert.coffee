@@ -79,6 +79,7 @@ module.exports = (env) =>
       @remote = null
       @rejected = false
       @rfDelay = if @config.rfdelay then @config.rfdelay else 500
+      @checkSensors = @config.checksensors
       @sensorAlert = false
 
       @variables = {
@@ -297,6 +298,10 @@ module.exports = (env) =>
       @_updateState('init')
 
     _checkSensors: () =>
+
+      # TODO: needs further testing in live environment
+      return unless @checksensors
+
       for sensor in @sensors
         if sensor.required?
           if sensor[sensor.required] == sensor.expectedValue

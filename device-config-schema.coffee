@@ -24,6 +24,7 @@ module.exports = {
             required:
               description: "Required to enable alert system"
               type: "boolean"
+              default: false
       switches:
         description: "List of switch devices"
         type: "array"
@@ -54,4 +55,8 @@ module.exports = {
         description: "Delay switching of HomuduinoRFSwitch for rfdelay ms"
         type: "number"
         default: "250"
+      checksensors:
+        description: "Enable/Disable sensor checking on activation"
+        type: "boolean"
+        default: false
 }
