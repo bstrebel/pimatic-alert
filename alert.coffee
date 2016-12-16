@@ -143,7 +143,6 @@ module.exports = (env) =>
         # process system switch state changes
         return unless @plugin.afterInit()
         # sync with optional remote switch
-        @remote.changeStateTo(state) if @remote?
         if state
           @rejected = not @_checkSensors()
           if @rejected
@@ -153,6 +152,7 @@ module.exports = (env) =>
             @variables['state'] = "Enabled"
             @variables['trigger'] = null
             @log('debug', "Alert system enabled")
+            @remote.changeStateTo(state) if @remote?
             @enabled.changeStateTo(true) if @enabled?
         else
           if not @rejected
@@ -161,6 +161,7 @@ module.exports = (env) =>
             @variables['trigger'] = null
             @_setTrigger("")
             @log('debug', "Alert system disabled")
+            @remote.changeStateTo(state) if @remote?
             @enabled.changeStateTo(false) if @enabled?
 
         @_updateState('state')
