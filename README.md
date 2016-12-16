@@ -143,7 +143,7 @@ generate required devices and runtime variables in the background.
       rejectDelay:
         description: "Delay before resetting the AlertSwitch after rejection"
         type: "number"
-        default: 1000
+        default: 3000
 ```
 
 Changelog
