@@ -24,6 +24,7 @@ module.exports = (env) =>
       @framework.deviceManager.registerDeviceClass 'AlertSystem',
         configDef: deviceConfigDef.AlertSystem
         createCallback: (config, lastState) =>
+
           return new AlertSystem(config, lastState, @)
 
       @framework.on 'after init', =>
@@ -77,16 +78,18 @@ module.exports = (env) =>
 
       @deviceManager = @plugin.framework.deviceManager
       @variableManager = @plugin.framework.variableManager
-
       @timeformat = @plugin.config.timeformat
+
       @displayTrigger = @config.trigger
       @autoConfig = @config.autoconfig
 
-      @sensors = null
-      @switches = null
       @alert = null
       @remote = null
       @enabled = null
+
+      @sensors = null
+      @switches = null
+
       @rejected = false
       @rfDelay = if @config.rfdelay then @config.rfdelay else 500
       @rejectdelay = if @config.rejectdelay then @config.rejectdelay else 1000
@@ -117,7 +120,7 @@ module.exports = (env) =>
         @log('debug', "Activation rejected")
         @getState()
           .then( (state) => setTimeout((=>
-            @changeStateTo(false)), @rejectDelay))
+            @changeStateTo(false)), @rejectdelay))
 
       @on 'state', (state) =>
         # process system switch state changes
@@ -237,23 +240,20 @@ module.exports = (env) =>
     _initDevice: (event) =>
 
       @log('debug', "Initializing from [#{event}]")
+      if @config.autoconfig
+        @_autoConfig()
+        @config.autoconfig = false
 
-
-      @config.alert = if @config.alert == '<auto>' then null else @config.alert
-      @config.enabled = if @config.enabled == '<auto>' then null else @config.enabled
-      @config.state = if @config.state == '<auto>' then null else @config.state
-
-      @_autoConfig() if @config.autoconfig
-
-      @sensors = []
-      @switches = []
       @alert = null
       @remote = null
       @enabled = null
 
+      @sensors = []
+      @switches = []
+
       @variables['state'] = "Error"
 
-      if not @config.alert?
+      if not !!@config.alert or @config.alert == '<auto>'
         @log('error', "Missing alert switch in configuration")
         return
       alert = @deviceManager.getDeviceById(@config.alert)
@@ -269,7 +269,7 @@ module.exports = (env) =>
 
       @log('debug', "Device \"#{alert.id}\" registered as alert switch device")
 
-      if @config.remote?
+      if !!@config.remote and @config.remote != '<auto>'
         remote = @deviceManager.getDeviceById(@config.remote)
         if remote?
           @remote = remote
@@ -278,14 +278,11 @@ module.exports = (env) =>
           remote.system = @
           remote.on 'state', remoteHandler
 
-      if @config.enabled?
+      if !!@config.enabled and @config.enabled != '<auto>'
         enabled = @deviceManager.getDeviceById(@config.enabled)
         if enabled?
           @enabled = enabled
           @log('debug', "Device \"#{enabled.id}\" registered as enabled device")
-
-          # remote.system = @
-          # remote.on 'state', remoteHandler
 
       register = (sensor, event, expectedValue, required) =>
         @log('debug', "Device \"#{sensor.id}\" registered as sensor")
@@ -353,7 +350,7 @@ module.exports = (env) =>
       @log('debug', "Running autoConfig ...")
 
       # AlertSwitch device
-      alertId = if !!@config.alert then @config.alert else @config.id + '-switch'
+      alertId = if !!@config.alert and @config.alert != '<auto>' then @config.alert else @config.id + '-switch'
       @config.alert = alertId
       if not @deviceManager.isDeviceInConfig(alertId)
         config = {
@@ -369,7 +366,7 @@ module.exports = (env) =>
           @log('error', error)
 
       # EnabledSwitch device
-      enabledId = if !!@config.enabled then @config.enabled else @config.id + '-enabled'
+      enabledId = if !!@config.enabled and @config.enabled != '<auto>' then @config.enabled else @config.id + '-enabled'
       @config.enabled = enabledId
       if not @deviceManager.isDeviceInConfig(enabledId)
         config = {
@@ -393,7 +390,7 @@ module.exports = (env) =>
           expression: '$' + name
         })
 
-      stateId = if !!@config.state then @config.state else @config.id + '-state'
+      stateId = if !!@config.state and @config.state != '<auto>' then @config.state else @config.id + '-state'
       @config.state = stateId
       if not @deviceManager.isDeviceInConfig(stateId)
         config = {
