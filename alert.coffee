@@ -16,6 +16,11 @@ module.exports = (env) =>
         createCallback: (config, lastState) ->
           return new AlertSwitch(config, lastState)
 
+      @framework.deviceManager.registerDeviceClass 'EnabledSwitch',
+        configDef: deviceConfigDef.EnabledSwitch
+        createCallback: (config, lastState) ->
+          return new EnabledSwitch(config, lastState)
+
       @framework.deviceManager.registerDeviceClass 'AlertSystem',
         configDef: deviceConfigDef.AlertSystem
         createCallback: (config, lastState) =>
@@ -29,9 +34,8 @@ module.exports = (env) =>
 
   plugin = new AlertPlugin
 
-
   class AlertSwitch extends env.devices.DummySwitch
-
+  class EnabledSwitch extends env.devices.DummySwitch
 
   class AlertSystem extends env.devices.DummySwitch
 
@@ -82,10 +86,11 @@ module.exports = (env) =>
       @switches = null
       @alert = null
       @remote = null
+      @enabled = null
       @rejected = false
       @rfDelay = if @config.rfdelay then @config.rfdelay else 500
       @rejectdelay = if @config.rejectdelay then @config.rejectdelay else 1000
-      @checksensors = @config.checkSensors
+      @checksensors = @config.checksensors
       @sensorAlert = false
 
       @variables = {
@@ -128,6 +133,7 @@ module.exports = (env) =>
             @variables['state'] = "Enabled"
             @variables['trigger'] = null
             @log('debug', "Alert system enabled")
+            @enabled.changeStateTo(true) if @enabled?
         else
           if not @rejected
             @_switchDevices(false)
@@ -135,6 +141,7 @@ module.exports = (env) =>
             @variables['trigger'] = null
             @_setTrigger("")
             @log('debug', "Alert system disabled")
+            @enabled.changeStateTo(false) if @enabled?
 
         @_updateState('state')
 
@@ -233,13 +240,16 @@ module.exports = (env) =>
 
 
       @config.alert = if @config.alert == '<auto>' then null else @config.alert
+      @config.enabled = if @config.enabled == '<auto>' then null else @config.enabled
       @config.state = if @config.state == '<auto>' then null else @config.state
+
       @_autoConfig() if @config.autoconfig
 
       @sensors = []
       @switches = []
       @alert = null
       @remote = null
+      @enabled = null
 
       @variables['state'] = "Error"
 
@@ -267,6 +277,15 @@ module.exports = (env) =>
 
           remote.system = @
           remote.on 'state', remoteHandler
+
+      if @config.enabled?
+        enabled = @deviceManager.getDeviceById(@config.enabled)
+        if enabled?
+          @enabled = enabled
+          @log('debug', "Device \"#{enabled.id}\" registered as enabled device")
+
+          # remote.system = @
+          # remote.on 'state', remoteHandler
 
       register = (sensor, event, expectedValue, required) =>
         @log('debug', "Device \"#{sensor.id}\" registered as sensor")
@@ -308,7 +327,7 @@ module.exports = (env) =>
     _checkSensors: () =>
 
       # TODO: needs further testing in production environment
-      if @checkSensors
+      if @checksensors
         for sensor in @sensors
           if sensor.required?
             if sensor[sensor.required] == sensor.expectedValue
@@ -346,6 +365,22 @@ module.exports = (env) =>
           alert = @deviceManager._loadDevice(config, null, null)
           @deviceManager.addDeviceToConfig(config)
           @log('debug', "Device \"#{alertId}\" added to configuration")
+        catch error
+          @log('error', error)
+
+      # EnabledSwitch device
+      enabledId = if !!@config.enabled then @config.enabled else @config.id + '-enabled'
+      @config.enabled = enabledId
+      if not @deviceManager.isDeviceInConfig(enabledId)
+        config = {
+          id: enabledId
+          name: "#{@config.name} enabled"
+          class: "EnabledSwitch"
+        }
+        try
+          enabled = @deviceManager._loadDevice(config, null, null)
+          @deviceManager.addDeviceToConfig(config)
+          @log('debug', "Device \"#{enabledId}\" added to configuration")
         catch error
           @log('error', error)
 

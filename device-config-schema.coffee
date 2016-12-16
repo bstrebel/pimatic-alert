@@ -5,6 +5,11 @@ module.exports = {
     type: "object"
     extensions: ["xLink", "xConfirm", "xOnLabel", "xOffLabel"]
     properties: {}
+  EnabledSwitch:
+    title: "EnabledSwitch config"
+    type: "object"
+    extensions: ["xLink", "xConfirm", "xOnLabel", "xOffLabel"]
+    properties: {}
   AlertSystem:
     title: "AlertSystem config"
     type: "object"
@@ -35,6 +40,10 @@ module.exports = {
       remote:
         description: "Optional remote control switch"
         type: "string"
+      enabled:
+        description: "EnabledSwitch device"
+        type: "string"
+        default: '<auto>'
       alert:
         description: "AlertSwitch device"
         type: "string"
