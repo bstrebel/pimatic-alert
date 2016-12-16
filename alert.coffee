@@ -341,7 +341,6 @@ module.exports = (env) =>
 
     _checkSensors: () =>
 
-      # TODO: needs further testing in production environment
       if @config.checkSensors
         for sensor in @sensors
           if sensor.required?
