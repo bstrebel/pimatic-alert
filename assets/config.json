@@ -76,20 +76,42 @@
     {
       "buttons": [
         {
-          "id": "contact-close",
-          "text": "close contact"
-        },
-        {
-          "id": "contact-open",
-          "text": "open contact"
-        },
-        {
           "id": "presence",
           "text": "trigger presence"
         }
       ],
-      "id": "buttons-device",
+      "id": "buttons-presence",
       "name": "buttons device",
+      "class": "ButtonsDevice"
+    },
+    {
+      "buttons": [
+        {
+          "id": "contact-one-close",
+          "text": "close"
+        },
+        {
+          "id": "contact-one-open",
+          "text": "open"
+        }
+      ],
+      "id": "buttons-contact-one",
+      "name": "contact one",
+      "class": "ButtonsDevice"
+    },
+    {
+      "buttons": [
+        {
+          "id": "contact-two-close",
+          "text": "close"
+        },
+        {
+          "id": "contact-two-open",
+          "text": "open"
+        }
+      ],
+      "id": "buttons-contact-two",
+      "name": "contact two",
       "class": "ButtonsDevice"
     },
     {
@@ -108,8 +130,13 @@
       "class": "DummySwitch"
     },
     {
-      "id": "contact-sensor",
-      "name": "contact sensor",
+      "id": "contact-one-sensor",
+      "name": "contact-one sensor",
+      "class": "DummyContactSensor"
+    },
+    {
+      "id": "contact-two-sensor",
+      "name": "contact-two sensor",
       "class": "DummyContactSensor"
     },
     {
@@ -158,7 +185,9 @@
       "name": "prealert",
       "class": "AlertSystem",
       "alert": "prealert-switch",
-      "state": "prealert-state"
+      "state": "prealert-state",
+      "enabled": "prealert-enabled",
+      "autoConfig": false
     },
     {
       "id": "alert-switch",
@@ -187,7 +216,11 @@
     {
       "sensors": [
         {
-          "name": "contact-sensor",
+          "name": "contact-one-sensor",
+          "required": true
+        },
+        {
+          "name": "contact-two-sensor",
           "required": true
         }
       ],
@@ -199,7 +232,21 @@
       "name": "alert",
       "class": "AlertSystem",
       "alert": "alert-switch",
-      "state": "alert-state"
+      "state": "alert-state",
+      "enabled": "alert-enabled",
+      "autoConfig": false,
+      "rejectDelay": 1000,
+      "checkSensors": true
+    },
+    {
+      "id": "prealert-enabled",
+      "name": "prealert enabled",
+      "class": "EnabledSwitch"
+    },
+    {
+      "id": "alert-enabled",
+      "name": "alert enabled",
+      "class": "EnabledSwitch"
     }
   ],
   "rules": [
@@ -211,18 +258,46 @@
       "logging": false
     },
     {
-      "id": "contact-open",
-      "name": "contact-open",
-      "rule": "when contact-open is pressed then open contact-sensor",
+      "id": "contact-one-open",
+      "name": "contact-one-open",
+      "rule": "when contact-one-open is pressed then open contact-one-sensor",
       "active": true,
       "logging": false
     },
     {
-      "id": "contact-close",
-      "name": "contact-close",
-      "rule": "when contact-close is pressed then close contact-sensor",
+      "id": "contact-one-close",
+      "name": "contact-one-close",
+      "rule": "when contact-one-close is pressed then close contact-one-sensor",
       "active": true,
       "logging": false
+    },
+    {
+      "id": "contact-two-open",
+      "name": "contact-two-open",
+      "rule": "when contact-two-open is pressed then open contact-two-sensor",
+      "active": true,
+      "logging": false
+    },
+    {
+      "id": "contact-two-close",
+      "name": "contact-two-close",
+      "rule": "when contact-two-close is pressed then close contact-two-sensor",
+      "active": true,
+      "logging": false
+    },
+    {
+      "id": "enable",
+      "name": "enable",
+      "rule": "when alert-enabled is turned on then log \"alert enabled\"",
+      "active": true,
+      "logging": true
+    },
+    {
+      "id": "alert",
+      "name": "alert",
+      "rule": "when alert-switch is turned on then log \"alert triggered by $alert-trigger at $alert-time\" and turn alert switch off after 1 minute",
+      "active": true,
+      "logging": true
     }
   ],
   "pages": [
@@ -231,13 +306,19 @@
       "name": "Favourites",
       "devices": [
         {
+          "deviceId": "prealert-enabled"
+        },
+        {
+          "deviceId": "alert-enabled"
+        },
+        {
           "deviceId": "prealert-switch"
         },
         {
-          "deviceId": "prealert-alarm"
+          "deviceId": "alert-switch"
         },
         {
-          "deviceId": "alert-switch"
+          "deviceId": "prealert-alarm"
         },
         {
           "deviceId": "alert-alarm"
@@ -258,13 +339,22 @@
           "deviceId": "prealert-state"
         },
         {
-          "deviceId": "contact-sensor"
+          "deviceId": "contact-one-sensor"
+        },
+        {
+          "deviceId": "contact-two-sensor"
+        },
+        {
+          "deviceId": "buttons-contact-one"
+        },
+        {
+          "deviceId": "buttons-contact-two"
         },
         {
           "deviceId": "presence-sensor"
         },
         {
-          "deviceId": "buttons-device"
+          "deviceId": "buttons-presence"
         }
       ]
     }
@@ -294,9 +384,12 @@
       "id": "sensors",
       "name": "sensors",
       "devices": [
-        "contact-sensor",
+        "contact-one-sensor",
+        "contact-two-sensor",
         "presence-sensor",
-        "buttons-device"
+        "buttons-contact-one",
+        "buttons-contact-two",
+        "buttons-presence"
       ],
       "rules": [],
       "variables": []
@@ -309,7 +402,9 @@
         "prealert-alarm",
         "alert-switch",
         "alert-alarm",
-        "alert-remote"
+        "alert-remote",
+        "prealert-enabled",
+        "alert-enabled"
       ],
       "rules": [],
       "variables": []
@@ -345,19 +440,19 @@
   "variables": [
     {
       "name": "alert-time",
-      "value": "2016-12-14 04:26:32"
+      "value": "2016-12-16 04:28:06"
     },
     {
       "name": "alert-state",
-      "value": "ENABLED"
+      "value": "DISABLED"
     },
     {
       "name": "alert-info",
-      "value": "[on]"
+      "value": "[off]"
     },
     {
       "name": "prealert-time",
-      "value": "2016-12-14 04:35:06"
+      "value": "2016-12-16 04:28:48"
     },
     {
       "name": "prealert-state",
@@ -369,11 +464,23 @@
     },
     {
       "name": "alert-trigger",
-      "value": "contact-sensor"
+      "value": "contact-two-sensor"
     },
     {
       "name": "prealert-trigger",
       "value": "presence-sensor"
+    },
+    {
+      "name": "newalert-time",
+      "value": "2016-12-16 04:03:00"
+    },
+    {
+      "name": "newalert-state",
+      "value": "DISABLED"
+    },
+    {
+      "name": "newalert-info",
+      "value": "[off]"
     }
   ]
 }

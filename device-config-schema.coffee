@@ -52,23 +52,23 @@ module.exports = {
         description: "Alert system VariablesDevice"
         type: "string"
         default: '<auto>'
-      trigger:
+      displayTrigger:
         description: "Display trigger device on alert system switch"
         type: "boolean"
         default: false
-      autoconfig:
+      autoConfig:
         description: "Generate default switch devices and variables"
         type: "boolean"
         default: true
-      rfdelay:
+      rfDelay:
         description: "Delay switching of HomuduinoRFSwitch for rfdelay ms"
         type: "number"
-        default: "250"
-      checksensors:
+        default: 500
+      checkSensors:
         description: "Enable/Disable sensor checking on activation"
         type: "boolean"
         default: false
-      rejectdelay:
+      rejectDelay:
         description: "Delay before resetting the AlertSwitch after rejection"
         type: "number"
         default: 1000

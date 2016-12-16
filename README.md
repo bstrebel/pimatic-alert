@@ -3,15 +3,15 @@ pimatic-alert
 The plugin is based on [_pimatic-alarm_](https://github.com/michbeck100/pimatic-alarm) which is a very neat and powerfull solution
 to realize a simple alarm system with pimatic sensor and actuator devices.
 
-I've learned a lot about pimatic event handling by the examination of the code ...
-
 The new _pimatic-alert_ plugin was build to replace my multi-instance
-alarm system which requires about 50 rules to maintain states and
-actions of 15 (HomeduinoRF)-sensors and -switch devices. The system
+alarm system which requires about 60 rules to maintain states and
+actions of 20 (HomeduinoRF)-sensors and -switch devices. The system
 works reliable but administration and change management is painful and
-error-prone. The plugin provides an AlertSystem device which can be
-easily configured through the mobile frontend. Even without restarting
-pimatic.
+error-prone. This plugin provides an AlertSystem device which can be
+easily configured through the mobile frontend. Many devices, rules and
+actions required by such kind of alert systems are configurable through
+the controller device. The alert system can be reconfigured on the fly
+even without restarting pimatic.
 
 Once you setup the alert system you can easily react on alert events
 with simple rules like:
@@ -23,17 +23,17 @@ $alert-trigger at $alert-time" and turn alert-switch off after 5 minutes
 An alert system is build from the following components:
 
 - Sensor Devices: Most probably something like HomeduinoRFPir or
-  HomeduinoRFContactSensor to trigger an alert. Or use dummy devices
-  like in the sample config.json from the repository.
+  HomeduinoRFContactSensor to trigger an alert.
 - AlertSystem: Main controller device to enable/disable the alert system
-- AlertSwitch: Main switch turned on by the sensor trigger devices.
+- AlertSwitch: Main switch turned on by the sensor trigger devices
 - Rules to do something when an alert is triggered
 
 The alert switch as well as some runtime variables are generated
 automatically in the background with the following IDs (where _ALERT_
 stands for the ID of the AlertSystem device):
 
-- _ALERT_-**switch**: the AlertSwitch device
+- _ALERT_-**switch**: AlertSwitch device triggerd by sensor
+- _ALERT_-**enabled**: EnabledSwitch reflecting the state of the system
 - _ALERT_-**state**: VariablesDevice to be used in the frontend
 - **$**_ALERT_-**trigger**: the device that triggerd the alert
 - **$**_ALERT_-**time**: the timestamp of the last update
@@ -48,7 +48,7 @@ your environment:
   mobile frontend **and** an addition HomeduinoRFSwitch
 - **switches**: a list of additional switch devices that will be
   automatically turned on when an alert is triggered (and turned off
-  when disabling the alarm system) without the need of additional rules.
+  when disabling the alarm system) without the need of additional rules
 - **required**: sensors marked "required" are checked for a valid state if
   you try to turn on the alarm system. The activation will be rejected
   if, for example, a contact sensor is open. You have to close the
@@ -60,7 +60,7 @@ Installation
 Just install the most recent revision and change the plugin properties
 according to your requirements
 
-```
+```json
   title: "Plugin config options"
   type: "object"
   properties:
@@ -78,10 +78,10 @@ Configuration
 -------------
 Create an AlertSystem device which is the main control switch to
 enable/disabe the alert system and references the sensor devices and
-actuators of the system. The device provides an "autoconfig" option to
+actuators of the system. The device provides an "autoConfig" option to
 generate required devices and runtime variables in the background.
 
-```
+```json
   AlertSystem:
     title: "AlertSystem config"
     type: "object"
@@ -101,6 +101,7 @@ generate required devices and runtime variables in the background.
             required:
               description: "Required to enable alert system"
               type: "boolean"
+              default: false
       switches:
         description: "List of switch devices"
         type: "array"
@@ -111,6 +112,10 @@ generate required devices and runtime variables in the background.
       remote:
         description: "Optional remote control switch"
         type: "string"
+      enabled:
+        description: "EnabledSwitch device"
+        type: "string"
+        default: '<auto>'
       alert:
         description: "AlertSwitch device"
         type: "string"
@@ -119,12 +124,43 @@ generate required devices and runtime variables in the background.
         description: "Alert system VariablesDevice"
         type: "string"
         default: '<auto>'
-      trigger:
+      displayTrigger:
         description: "Display trigger device on alert system switch"
         type: "boolean"
         default: false
-      autoconfig:
+      autoConfig:
         description: "Generate default switch devices and variables"
         type: "boolean"
         default: true
+      rfDelay:
+        description: "Delay switching of HomuduinoRFSwitch for rfdelay ms"
+        type: "number"
+        default: 500
+      checkSensors:
+        description: "Enable/Disable sensor checking on activation"
+        type: "boolean"
+        default: false
+      rejectDelay:
+        description: "Delay before resetting the AlertSwitch after rejection"
+        type: "number"
+        default: 1000
 ```
+
+Changelog
+---------
+
+0.3.0
+
+- EnabledSwitch device implementation [#2](https://github.com/bstrebel/pimatic-alert/issues/2)
+- config properties refactoring (may issue some attribute warnings on
+  first startup, pls. ignore)
+- code cleanup
+
+0.2.11
+
+- bug fixes of event timing issues [#1](https://github.com/bstrebel/pimatic-alert/issues/1)
+- many minor improvements
+
+0.2.0
+
+- initial release

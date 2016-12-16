@@ -25,6 +25,29 @@ module.exports = (env) =>
         configDef: deviceConfigDef.AlertSystem
         createCallback: (config, lastState) =>
 
+          # process legacy config settings: maybe removed in future releases
+          # config: trigger, autoconfig, rfdelay, rejectdelay, checksensors
+
+          if config.trigger?
+            config.displayTrigger = config.trigger
+            delete(config.trigger)
+
+          if config.autoconfig?
+            config.autoConfig = config.autoconfig
+            delete(config.autoconfig)
+
+          if config.rfdelay?
+            config.rfDelay = config.rfdelay
+            delete(config.rfdelay)
+
+          if config.rejectdelay?
+            config.rejectDelay = config.rejectdelay
+            delete(config.rejectdelay)
+
+          if config.checksensors?
+            config.checkSensors = config.checksensors
+            delete(config.checksensors)
+
           return new AlertSystem(config, lastState, @)
 
       @framework.on 'after init', =>
@@ -55,7 +78,7 @@ module.exports = (env) =>
 
     _setTrigger: (trigger) ->
       @_trigger = if trigger? then @_trigger = trigger else @_trigger = ""
-      @emit 'trigger', @_trigger if @config.trigger
+      @emit 'trigger', @_trigger if @config.displayTrigger
 
     ###############################################################################################
     ###############################################################################################
@@ -79,8 +102,6 @@ module.exports = (env) =>
       @deviceManager = @plugin.framework.deviceManager
       @variableManager = @plugin.framework.variableManager
       @timeformat = @plugin.config.timeformat
-
-      # config: trigger, autoconfig, rfdelay, rejectdelay, checksensors
 
       @alert = null
       @remote = null
@@ -116,7 +137,7 @@ module.exports = (env) =>
         @log('debug', "Activation rejected")
         @getState()
           .then( (state) => setTimeout((=>
-            @changeStateTo(false)), @config.rejectdelay))
+            @changeStateTo(false)), @config.rejectDelay))
 
       @on 'state', (state) =>
         # process system switch state changes
@@ -236,9 +257,9 @@ module.exports = (env) =>
     _initDevice: (event) =>
 
       @log('debug', "Initializing from [#{event}]")
-      if @config.autoconfig
+      if @config.autoConfig
         @_autoConfig()
-        @config.autoconfig = false
+        @config.autoConfig = false
 
       @alert = null
       @remote = null
@@ -320,7 +341,7 @@ module.exports = (env) =>
     _checkSensors: () =>
 
       # TODO: needs further testing in production environment
-      if @config.checksensors
+      if @config.checkSensors
         for sensor in @sensors
           if sensor.required?
             if sensor[sensor.required] == sensor.expectedValue
@@ -442,7 +463,7 @@ module.exports = (env) =>
           if actuator instanceof env.devices.DummySwitch
             actuator.changeStateTo(state)
           else
-            timeout += @config.rfdelay
+            timeout += @config.rfDelay
             @log('debug', "Switching device \"#{actuator.id}\" delayed #{timeout} ms!")
             setTimeout((->
               actuator.changeStateTo(state)), timeout)
