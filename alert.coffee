@@ -55,7 +55,7 @@ module.exports = (env) =>
 
     _setTrigger: (trigger) ->
       @_trigger = if trigger? then @_trigger = trigger else @_trigger = ""
-      @emit 'trigger', @_trigger if @displayTrigger
+      @emit 'trigger', @_trigger if @config.trigger
 
     ###############################################################################################
     ###############################################################################################
@@ -80,8 +80,7 @@ module.exports = (env) =>
       @variableManager = @plugin.framework.variableManager
       @timeformat = @plugin.config.timeformat
 
-      @displayTrigger = @config.trigger
-      @autoConfig = @config.autoconfig
+      # config: trigger, autoconfig, rfdelay, rejectdelay, checksensors
 
       @alert = null
       @remote = null
@@ -91,9 +90,6 @@ module.exports = (env) =>
       @switches = null
 
       @rejected = false
-      @rfDelay = if @config.rfdelay then @config.rfdelay else 500
-      @rejectdelay = if @config.rejectdelay then @config.rejectdelay else 1000
-      @checksensors = @config.checksensors
       @sensorAlert = false
 
       @variables = {
@@ -120,7 +116,7 @@ module.exports = (env) =>
         @log('debug', "Activation rejected")
         @getState()
           .then( (state) => setTimeout((=>
-            @changeStateTo(false)), @rejectdelay))
+            @changeStateTo(false)), @config.rejectdelay))
 
       @on 'state', (state) =>
         # process system switch state changes
@@ -324,7 +320,7 @@ module.exports = (env) =>
     _checkSensors: () =>
 
       # TODO: needs further testing in production environment
-      if @checksensors
+      if @config.checksensors
         for sensor in @sensors
           if sensor.required?
             if sensor[sensor.required] == sensor.expectedValue
@@ -446,7 +442,7 @@ module.exports = (env) =>
           if actuator instanceof env.devices.DummySwitch
             actuator.changeStateTo(state)
           else
-            timeout += @rfDelay
+            timeout += @config.rfdelay
             @log('debug', "Switching device \"#{actuator.id}\" delayed #{timeout} ms!")
             setTimeout((->
               actuator.changeStateTo(state)), timeout)
