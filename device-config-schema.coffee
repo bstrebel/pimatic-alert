@@ -71,5 +71,5 @@ module.exports = {
       rejectDelay:
         description: "Delay before resetting the AlertSwitch after rejection"
         type: "number"
-        default: 3000
+        default: 1000
 }

@@ -1,17 +1,20 @@
 pimatic-alert
 =============
 The plugin is based on [_pimatic-alarm_](https://github.com/michbeck100/pimatic-alarm) which is a very neat and powerfull solution
-to realize a simple alarm system with pimatic sensor and actuator devices.
+to realize a simple alarm system with pimatic sensors and actuator devices.
 
 The new _pimatic-alert_ plugin was build to replace my multi-instance
-alarm system which requires about 60 rules to maintain states and
-actions of 20 (HomeduinoRF)-sensors and -switch devices. The system
-works reliable but administration and change management is painful and
-error-prone. This plugin provides an AlertSystem device which can be
-easily configured through the mobile frontend. Many devices, rules and
-actions required by such kind of alert systems are configurable through
-the controller device. The alert system can be reconfigured on the fly
-even without restarting pimatic.
+alarm system which required 83 rules to maintain configuration, states
+and actions of (HomeduinoRF-) contact/PIR sensors (27) and switch
+devices (8). The system works fairly reliable but administration and
+change management is painful and error-prone. 
+
+This plugin provides an AlertSystem device which can be easily
+configured through the mobile frontend. Many devices, rules and actions
+required by such kind of alert systems are configurable through the
+controller device. The alert system can be reconfigured on the fly even
+without restarting pimatic. It's also simple, to maintain several alert
+profiles (day, night, vacation, etc.) and activate them on demand.
 
 Once you setup the alert system you can easily react on alert events
 with simple rules like:
@@ -20,16 +23,18 @@ with simple rules like:
 when alert-switch is turned on then log "alert triggered by
 $alert-trigger at $alert-time" and turn alert-switch off after 5 minutes
 ```
+Use the [sample configuration](https://github.com/bstrebel/pimatic-alert/tree/master/assets) from github to start playing on a test system.
+
 An alert system is build from the following components:
 
-- Sensor Devices: Most probably something like HomeduinoRFPir or
+- **Sensor Devices**: most probably something like HomeduinoRFPir or
   HomeduinoRFContactSensor to trigger an alert.
-- AlertSystem: Main controller device to enable/disable the alert system
-- AlertSwitch: Main switch turned on by the sensor trigger devices
-- Rules to do something when an alert is triggered
+- **AlertSystem**: main controller device to enable/disable the alert system
+- **AlertSwitch**: main switch turned on by the sensor trigger devices
+- **Rules**: to do something when an alert is triggered ...
 
 The alert switch as well as some runtime variables are generated
-automatically in the background with the following IDs (where _ALERT_
+automatically in the background with the following pre-defined IDs (where _ALERT_
 stands for the ID of the AlertSystem device):
 
 - _ALERT_-**switch**: AlertSwitch device triggerd by sensor
@@ -40,20 +45,29 @@ stands for the ID of the AlertSystem device):
 - **$**_ALERT_-**reject**: device that caused a rejection (see below)
 - **$**_ALERT_-**error**: some error descriptions
 
+Set the **autoConfig** option to false if you don't want the plugin to
+generate devices but create them manually.
+
 In adition their are some optional properties which may be useful for
 your environment:
 
-- **remote**: and additional switch which is kept in sync with the system
-  switch. Can be used to enable/disable the alert system with via the
-  mobile frontend **and** an addition HomeduinoRFSwitch
+- **remote**: additional switch which is kept in sync with the system
+  switch. Can be used to enable/disable the alert system via the mobile
+  frontend **and** an optional HomeduinoRFSwitch remote control
+
 - **switches**: a list of additional switch devices that will be
   automatically turned on when an alert is triggered (and turned off
   when disabling the alarm system) without the need of additional rules
-- **required**: sensors marked "required" are checked for a valid state if
-  you try to turn on the alarm system. The activation will be rejected
-  if, for example, a contact sensor is open. You have to close the
-  door/window first before activating the alert system ;-)
 
+- **required**: sensors marked "required" are checked for a valid state
+  if you try to turn on the alarm system. The activation will be
+  rejected if, for example, a contact sensor is open. You have to close
+  the door/window first before activating the alert system ;-) If you
+  use this feature (can be disabled with the **checkSensors** option)
+  make sure to use the ALERT-enabled switch to trigger actions on
+  enabling the alert system. The controller switch may immediately
+  switch back to off if the activation is rejected but fires your rule
+  by accident.
 
 Installation
 ------------
@@ -79,7 +93,7 @@ Configuration
 Create an AlertSystem device which is the main control switch to
 enable/disabe the alert system and references the sensor devices and
 actuators of the system. The device provides an "autoConfig" option to
-generate required devices and runtime variables in the background.
+generate required slave devices and runtime variables in the background.
 
 ```json
   AlertSystem:
@@ -146,8 +160,18 @@ generate required devices and runtime variables in the background.
         default: 3000
 ```
 
+Todo
+----
+- Grunt test scripts
+- Travis integration
+
+
 Changelog
 ---------
+
+0.3.1
+
+- optimized triggering of remote controls to avoid racing conditions [#2](https://github.com/bstrebel/pimatic-alert/issues/2)
 
 0.3.0
 
