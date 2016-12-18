@@ -221,7 +221,7 @@ module.exports = (env) =>
                 @_switchDevices(alert)
               else
                 if @sensorAlert
-                  @log('debug', "Alert from \"#{device.id}\" ignored")
+                  # @log('debug', "Alert from \"#{device.id}\" ignored")
                   @sensorAlert = false
                 else
                   @log('info', "Alert triggered by switch \"#{device.id}\"")
@@ -462,13 +462,12 @@ module.exports = (env) =>
       if @switches?
         for actuator in @switches
           if actuator._state != state
-            # TODO: check against HomeduinoRFSwitch
-            if actuator instanceof env.devices.DummySwitch
-              @log('debug', "Switching device \"#{actuator.id}\" => #{if state then 'ON' else 'OFF'}")
-              actuator.changeStateTo(state)
-            else
+            if actuator.config.class == "HomeduinoRFSwitch"
               timeout += @config.rfDelay
               delayed(actuator, state, timeout)
+            else
+              @log('debug', "Switching device \"#{actuator.id}\" => #{if state then 'ON' else 'OFF'}")
+              actuator.changeStateTo(state)
 
       return true
 
