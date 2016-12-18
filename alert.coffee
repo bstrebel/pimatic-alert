@@ -137,7 +137,7 @@ module.exports = (env) =>
         @log('debug', "Activation rejected")
         setTimeout(( =>
           @changeStateTo(false)), @config.rejectDelay)
-        @remote.changeStateTo(false) if @remote? and remote._state != false
+        @remote.changeStateTo(false) if @remote? and @remote._state != false
 
       @on 'state', (state) =>
         return unless @plugin.afterInit()
@@ -150,7 +150,7 @@ module.exports = (env) =>
             @variables['state'] = "Enabled"
             @variables['trigger'] = null
             @log('debug', "Alert system enabled")
-            @remote.changeStateTo(state) if @remote? and remote._state != state
+            @remote.changeStateTo(state) if @remote? and @remote._state != state
             @enabled.changeStateTo(true) if @enabled?
         else
           if not @rejected
@@ -159,7 +159,7 @@ module.exports = (env) =>
             @variables['trigger'] = null
             @_setTrigger("")
             @log('debug', "Alert system disabled")
-            @remote.changeStateTo(state) if @remote? and remote._state != state
+            @remote.changeStateTo(state) if @remote? and @remote._state != state
             @enabled.changeStateTo(false) if @enabled?
 
         @_updateState('state')
