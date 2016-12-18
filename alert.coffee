@@ -452,19 +452,24 @@ module.exports = (env) =>
 
     _switchDevices: (state) =>
 
-      timeout = 0
+      delayed = (device, state, delay) =>
+        setTimeout((=>
+          @log('debug', \
+            "Switching device \"#{device.id}\" => #{if state then 'ON' else 'OFF'} (delay=#{delay}ms)")
+          device.changeStateTo(state)), delay)
 
+      timeout = 0
       if @switches?
         for actuator in @switches
-          # TODO: check against HomeduinoRFSwitch
-          @log('debug', "Switching device \"#{actuator.id}\" => #{if state then 'ON' else 'OFF'}")
-          if actuator instanceof env.devices.DummySwitch
-            actuator.changeStateTo(state)
-          else
-            timeout += @config.rfDelay
-            @log('debug', "Switching device \"#{actuator.id}\" delayed #{timeout} ms!")
-            setTimeout((->
-              actuator.changeStateTo(state)), timeout)
+          if actuator._state != state
+            # TODO: check against HomeduinoRFSwitch
+            if actuator instanceof env.devices.DummySwitch
+              @log('debug', "Switching device \"#{actuator.id}\" => #{if state then 'ON' else 'OFF'}")
+              actuator.changeStateTo(state)
+            else
+              timeout += @config.rfDelay
+              delayed(actuator, state, timeout)
+
       return true
 
 
