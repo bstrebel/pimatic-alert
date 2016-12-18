@@ -135,14 +135,12 @@ module.exports = (env) =>
       @on 'rejected', () =>
         # switch back to "off" immediately after we resolved the state change
         @log('debug', "Activation rejected")
-        @getState()
-          .then( (state) => setTimeout((=>
-            @changeStateTo(false)), @config.rejectDelay))
+        setTimeout(( =>
+          @changeStateTo(false)), @config.rejectDelay)
+        @remote.changeStateTo(false) if @remote? and remote._state != false
 
       @on 'state', (state) =>
-        # process system switch state changes
         return unless @plugin.afterInit()
-        # sync with optional remote switch
         if state
           @rejected = not @_checkSensors()
           if @rejected
@@ -152,7 +150,7 @@ module.exports = (env) =>
             @variables['state'] = "Enabled"
             @variables['trigger'] = null
             @log('debug', "Alert system enabled")
-            @remote.changeStateTo(state) if @remote?
+            @remote.changeStateTo(state) if @remote? and remote._state != state
             @enabled.changeStateTo(true) if @enabled?
         else
           if not @rejected
@@ -161,7 +159,7 @@ module.exports = (env) =>
             @variables['trigger'] = null
             @_setTrigger("")
             @log('debug', "Alert system disabled")
-            @remote.changeStateTo(state) if @remote?
+            @remote.changeStateTo(state) if @remote? and remote._state != state
             @enabled.changeStateTo(false) if @enabled?
 
         @_updateState('state')
