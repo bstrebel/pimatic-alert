@@ -128,6 +128,39 @@ module.exports = (env) =>
         # first time during startup
         @_initDevice('constructor')
 
+      ######################################
+      # check for recreated switch devices #
+      ######################################
+
+      @plugin.framework.on 'deviceChanged', (device) =>
+        return unless @plugin.afterInit()
+        for switchDevice in [@alert, @enabled, @remote]
+          if device.id == switchDevice?.id
+            if device.deviceChanged?
+              @log('debug', "Updating recreated device \"#{device.id}\" ...")
+              delete(device.deviceChanged)
+              if device.id == @enabled?.id
+                @enabled = device
+              else if device.id == @alert?.id
+                device.system = @
+                device.on 'state', alertHandler
+                @alert = device
+                @switches[0] = @alert
+              else if device.id == @remote?.id
+                device.system = @
+                device.on 'state', remoteHandler
+                @remote = device
+              else
+                @log('error', "Configuration error: [#{device.id}]")
+            else
+              # deviceChanged is fired twice
+              # we ignore the first one
+              device.deviceChanged = true
+
+      @plugin.framework.on 'deviceRemoved', (device) =>
+        return unless @plugin.afterInit()
+        @log('debug', "Removed device #{device.id}")
+
       ###############################
       # AlertSwitch event listeners #
       ###############################
