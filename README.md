@@ -162,12 +162,21 @@ generate required slave devices and runtime variables in the background.
 
 Todo
 ----
-- Grunt test scripts
+- Grunt test script
 - Travis integration
 
 
 Changelog
 ---------
+
+0.3.5
+
+- allow recreation of alert system switch devices
+- improved error messages during device init
+
+0.3.4
+
+- bugfix delayed switching of HomeduinoRFSwitch
 
 0.3.1
 
