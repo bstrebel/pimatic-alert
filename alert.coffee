@@ -2,6 +2,7 @@ module.exports = (env) =>
 
   Promise = env.require 'bluebird'
   t = env.require('decl-api').types
+  _ = env.require 'lodash'
 
   class AlertPlugin extends env.plugins.Plugin
 
@@ -133,33 +134,42 @@ module.exports = (env) =>
       ######################################
 
       @plugin.framework.on 'deviceChanged', (device) =>
-        return unless @plugin.afterInit()
-        for switchDevice in [@alert, @enabled, @remote]
-          if device.id == switchDevice?.id
-            if device.deviceChanged?
-              @log('debug', "Updating recreated device \"#{device.id}\" ...")
-              delete(device.deviceChanged)
-              if device.id == @enabled?.id
-                @enabled = device
-              else if device.id == @alert?.id
-                device.system = @
-                device.on 'state', alertHandler
-                @alert = device
-                @switches[0] = @alert
-              else if device.id == @remote?.id
-                device.system = @
-                device.on 'state', remoteHandler
-                @remote = device
-              else
-                @log('error', "Configuration error: [#{device.id}]")
-            else
-              # deviceChanged is fired twice
-              # we ignore the first one
-              device.deviceChanged = true
+        switchDevice = _.find [@alert, @enabled, @remote], {id: device.id}
+        return unless switchDevice?
+        if switchDevice.deviceChanged? == true
+          @log('debug', "Updating recreated device \"#{device.id}\" ...")
+          if device.id == @enabled?.id
+            @enabled = device
+          else if device.id == @alert?.id
+            device.system = @
+            device.on 'state', alertHandler
+            @alert = device
+            @switches[0] = @alert
+          else if device.id == @remote?.id
+            device.system = @
+            device.on 'state', remoteHandler
+            @remote = device
+          else
+            @log('error', "Configuration error: [#{device.id}]")
+        else
+          # deviceChanged is fired twice: ignore the first emit
+          switchDevice.deviceChanged = true
 
       @plugin.framework.on 'deviceRemoved', (device) =>
-        return unless @plugin.afterInit()
-        @log('debug', "Removed device #{device.id}")
+        switchDevice = _.find [@alert, @enabled, @remote], {id: device.id}
+        return unless switchDevice?
+        @log('debug', "Device \"#{device.id}\" removed")
+        if device.id == @enabled?.id
+          @enabled = "<auto>"
+        else if device.id == @alert?.id
+          @config.alert = "<auto>"
+        else if device.id == @remote?.id
+          @config.remote = ""
+        else
+          @log('error', "Configuration error: [#{device.id}]")
+        switchDevice = null
+        # @plugin.framework.saveConfig()
+
 
       ###############################
       # AlertSwitch event listeners #
