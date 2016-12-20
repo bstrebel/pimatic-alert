@@ -171,12 +171,13 @@ Changelog
 
 0.3.5
 
-- allow recreation of alert system switch devices
+- allow recreation of alert system switch devices [#3](https://github.com/bstrebel/pimatic-alert/issues/2)
 - improved error messages during device init
 
 0.3.4
 
 - bugfix delayed switching of HomeduinoRFSwitch
+- several other changes to fix broken releases 0.3.2 and 0.3.3
 
 0.3.1
 
