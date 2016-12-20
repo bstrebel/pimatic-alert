@@ -3,7 +3,8 @@
   "description": "Alert system plugin for pimatic",
   "main": "alert.coffee",
   "files": [
-    "alert.coffee",
+    "test",
+	"alert.coffee",
     "README.md",
     "alert-config-schema.coffee",
     "device-config-schema.coffee",
@@ -12,20 +13,23 @@
   "version": "0.3.5",
   "private": false,
   "configSchema": "alert-config-schema.coffee",
-  "scripts": {},
+  "scripts": {
+    "test": "grunt test"
+  },
   "dependencies": {},
   "devDependencies": {
-    "blanket": "^1.2.3",
-    "bluebird": "^3.4.6",
-    "chai": "^3.5.0",
+    "blanket": "^1.2.2",
+    "bluebird": "^3.3.4",
+    "chai": "3.5.0",
     "coffee-errors": "^0.8.6",
-    "coffee-script": "^1.12.2",
+    "coffee-script": "^1.10.0",
     "decl-api": "0.0.22",
-    "grunt": "^1.0.1",
-    "grunt-cli": "^1.2.0",
-    "grunt-coffeelint": "0.0.16",
-    "grunt-mocha-test": "^0.13.2",
-    "mocha": "^3.2.0"
+    "grunt": "^0.4.5",
+    "grunt-cli": "^0.1.13",
+    "grunt-coffeelint": "0.0.8",
+    "grunt-mocha-test": "^0.12.7",
+    "lodash": "^4.17.2",
+    "mocha": "^2.4.5"
   },
   "peerDependencies": {
     "pimatic": "~0.9.0"

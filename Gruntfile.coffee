@@ -30,15 +30,12 @@ module.exports = (grunt) ->
         options:
           reporter: "dot"
         src: ["test/*"]
-      ###
       coverage:
         options:
           reporter: "html-cov"
           quiet: true
           captureFile: "coverage.html"
         src: ["test/*"]
-
-        ###
 
   grunt.loadNpmTasks "grunt-coffeelint"
   grunt.loadNpmTasks "grunt-mocha-test"
