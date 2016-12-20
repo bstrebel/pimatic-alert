@@ -323,8 +323,12 @@ module.exports = (env) =>
         @log('error', "Missing alert switch in configuration")
         return
       alert = @deviceManager.getDeviceById(@config.alert)
-      if alert not instanceof AlertSwitch
-        @log('error', "Device \"#{alert.id}\" is not a valid alert switch")
+      if alert?
+        if alert not instanceof AlertSwitch
+          @log('error', "Device \"#{alert.id}\" is not a valid alert switch")
+          return
+      else
+        @log('error', "Alert device \"#{@config.alert}\" not found")
         return
 
       @alert = @addHandler(alert, 'state', alertHandler)
@@ -336,12 +340,16 @@ module.exports = (env) =>
         if remote?
           @remote = @addHandler(remote, 'state', remoteHandler)
           @log('debug', "Device \"#{remote.id}\" registered as remote device")
+        else
+          @log('error', "Remote device \"#{@config.remote}\" not found")
 
       if !!@config.enabled and @config.enabled != '<auto>'
         enabled = @deviceManager.getDeviceById(@config.enabled)
         if enabled?
           @enabled = enabled
           @log('debug', "Device \"#{enabled.id}\" registered as enabled device")
+        else
+          @log('error', "Enabled device \"#{@config.enabled}\" not found")
 
       register = (sensor, event, expectedValue, required) =>
         sensor = @addHandler(sensor, event, sensorHandler)
@@ -360,7 +368,7 @@ module.exports = (env) =>
           else
             @log('error', "Device \"#{sensor.id}\" is not a valid sensor")
         else
-          @log('error', "Device \"#{id}\" not found")
+          @log('error', "Sensor device \"#{item.name}\" not found")
 
       for id in @config.switches
         actuator = @deviceManager.getDeviceById(id)
@@ -370,6 +378,8 @@ module.exports = (env) =>
             @log('debug', "Device \"#{actuator.id}\" registerd as switch")
           else
             @log('error', "Device \"#{actuator.id}\" is not a valid switch")
+        else
+          @log('error', "Switch device \"#{id}\" not found")
 
       # always turn off alert on system start
       @_switchDevices(false)
