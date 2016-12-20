@@ -90,6 +90,16 @@ module.exports = (env) =>
     ###############################################################################################
     ###############################################################################################
 
+    addHandler: (device, event, handler) =>
+      # add event handler only once to switch and sensor devices
+      if not _.find(device._events['state'], (handler) -> handler == alertHandler)
+        device.system = @
+        device.on event, handler
+      return device
+
+###############################################################################################
+    ###############################################################################################
+
     constructor: (config, lastState, plugin) ->
 
       super(config, lastState)
@@ -134,6 +144,7 @@ module.exports = (env) =>
       ######################################
 
       @plugin.framework.on 'deviceChanged', (device) =>
+
         switchDevice = _.find [@alert, @enabled, @remote], {id: device.id}
         return unless switchDevice?
         if switchDevice.deviceChanged? == true
@@ -141,14 +152,10 @@ module.exports = (env) =>
           if device.id == @enabled?.id
             @enabled = device
           else if device.id == @alert?.id
-            device.system = @
-            device.on 'state', alertHandler
-            @alert = device
+            @alert = @addHandler(device, 'state', alertHandler)
             @switches[0] = @alert
           else if device.id == @remote?.id
-            device.system = @
-            device.on 'state', remoteHandler
-            @remote = device
+            @remote = @addHandler(device, 'state', remoteHandler)
           else
             @log('error', "Configuration error: [#{device.id}]")
         else
@@ -320,22 +327,15 @@ module.exports = (env) =>
         @log('error', "Device \"#{alert.id}\" is not a valid alert switch")
         return
 
-      alert.system = @
-      alert.on 'state', alertHandler
-
-      @alert = alert
+      @alert = @addHandler(alert, 'state', alertHandler)
       @switches.push(alert)
-
       @log('debug', "Device \"#{alert.id}\" registered as alert switch device")
 
       if !!@config.remote and @config.remote != '<auto>'
         remote = @deviceManager.getDeviceById(@config.remote)
         if remote?
-          @remote = remote
+          @remote = @addHandler(remote, 'state', remoteHandler)
           @log('debug', "Device \"#{remote.id}\" registered as remote device")
-
-          remote.system = @
-          remote.on 'state', remoteHandler
 
       if !!@config.enabled and @config.enabled != '<auto>'
         enabled = @deviceManager.getDeviceById(@config.enabled)
@@ -344,13 +344,11 @@ module.exports = (env) =>
           @log('debug', "Device \"#{enabled.id}\" registered as enabled device")
 
       register = (sensor, event, expectedValue, required) =>
-        @log('debug', "Device \"#{sensor.id}\" registered as sensor")
-        @sensors.push(sensor)
-
-        sensor.system = @
+        sensor = @addHandler(sensor, event, sensorHandler)
         sensor.required = if required then '_' + event else null
         sensor.expectedValue = expectedValue
-        sensor.on event, sensorHandler
+        @sensors.push(sensor)
+        @log('debug', "Device \"#{sensor.id}\" registered as sensor")
 
       for item in @config.sensors
         sensor = @deviceManager.getDeviceById(item.name)
@@ -504,6 +502,9 @@ module.exports = (env) =>
       timeout = 0
       if @switches?
         for actuator in @switches
+          # reload because of possible recreated new devices
+          # with the same device id
+          actuator = @deviceManager.getDeviceById(actuator.id)
           if actuator._state != state
             if actuator.config.class == "HomeduinoRFSwitch"
               timeout += @config.rfDelay
