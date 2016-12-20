@@ -416,7 +416,8 @@ module.exports = (env) =>
       @log('debug', "Running autoConfig ...")
 
       # AlertSwitch device
-      alertId = if !!@config.alert and @config.alert != '<auto>' then @config.alert else @config.id + '-switch'
+      alertId = if !!@config.alert and @config.alert != '<auto>' then @config.alert \
+                                                                 else @config.id + '-switch'
       @config.alert = alertId
       if not @deviceManager.isDeviceInConfig(alertId)
         config = {
@@ -432,7 +433,8 @@ module.exports = (env) =>
           @log('error', error)
 
       # EnabledSwitch device
-      enabledId = if !!@config.enabled and @config.enabled != '<auto>' then @config.enabled else @config.id + '-enabled'
+      enabledId = if !!@config.enabled and @config.enabled != '<auto>' \
+                  then @config.enabled else @config.id + '-enabled'
       @config.enabled = enabledId
       if not @deviceManager.isDeviceInConfig(enabledId)
         config = {
@@ -456,7 +458,8 @@ module.exports = (env) =>
           expression: '$' + name
         })
 
-      stateId = if !!@config.state and @config.state != '<auto>' then @config.state else @config.id + '-state'
+      stateId = if !!@config.state and @config.state != '<auto>' \
+                then @config.state else @config.id + '-state'
       @config.state = stateId
       if not @deviceManager.isDeviceInConfig(stateId)
         config = {
@@ -488,7 +491,8 @@ module.exports = (env) =>
 
       V.info =
         if V.state is "ALERT" and trigger? then "[#{@deviceManager.getDeviceById(trigger).name}]"
-        else if V.state is "REJECTED" and reject? then "[#{@deviceManager.getDeviceById(reject).name}]"
+        else if V.state is "REJECTED" and reject? \
+             then "[#{@deviceManager.getDeviceById(reject).name}]"
         else if V.state is "ERROR" and error? then "[#{error}]"
         else if V.state is "ENABLED" then "[on]"
         else if V.state is "DISABLED" then "[off]"
@@ -505,8 +509,8 @@ module.exports = (env) =>
 
       delayed = (device, state, delay) =>
         setTimeout((=>
-          @log('debug', \
-            "Switching device \"#{device.id}\" => #{if state then 'ON' else 'OFF'} (delay=#{delay}ms)")
+          @log('debug', "Switching device \"#{device.id}\" => \
+                        #{if state then 'ON' else 'OFF'} (delay=#{delay}ms)")
           device.changeStateTo(state)), delay)
 
       timeout = 0
@@ -520,7 +524,8 @@ module.exports = (env) =>
               timeout += @config.rfDelay
               delayed(actuator, state, timeout)
             else
-              @log('debug', "Switching device \"#{actuator.id}\" => #{if state then 'ON' else 'OFF'}")
+              @log('debug', "Switching device \"#{actuator.id}\" => \
+                             #{if state then 'ON' else 'OFF'}")
               actuator.changeStateTo(state)
 
       return true
