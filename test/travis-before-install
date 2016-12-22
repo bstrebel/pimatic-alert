@@ -1,6 +1,7 @@
 #!/bin/sh
 echo STDOUT
-echo STDERR 2>&1
+ls -l
+ls -l node_modules
 pwd -P
 cd ..
 mkdir node_modules
