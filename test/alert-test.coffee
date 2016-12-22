@@ -94,8 +94,6 @@ describe "pimatic", ->
       ).on "error", (e) ->
         throw e
 
-  describe 'plugin', ->
-
+  describe 'plugin pimatic-alert', ->
     it 'should be installed', ->
-
       assert framework.pluginManager.isInstalled('pimatic-alert')
