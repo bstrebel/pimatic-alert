@@ -3,4 +3,4 @@ pwd -P
 mv -v test/startup.coffee .
 mkdir node_modules
 mkdir node_modules/pimatic-alert
-cp *.coffee node/modules/pimatic-alert
+cp *.coffee node_modules/pimatic-alert
