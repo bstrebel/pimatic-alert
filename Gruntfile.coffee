@@ -24,17 +24,7 @@ module.exports = (grunt) ->
         options:
           reporter: "spec"
           require: ['coffee-errors'] #needed for right line numbers in errors
-        src: ["test/*.coffee"]
-      testPimatic:
-        options:
-          reporter: "spec"
-          require: ['coffee-errors'] #needed for right line numbers in errors
-        src: ["test/pimatic-test.coffee"]
-      testPlugin:
-        options:
-          reporter: "spec"
-          require: ['coffee-errors'] #needed for right line numbers in errors
-        src: ["test/pimatic-alert.coffee"]
+        src: ["test/alert-test.coffee"]
       # blanket is used to record coverage
       testBlanket:
         options:
@@ -50,7 +40,7 @@ module.exports = (grunt) ->
   grunt.loadNpmTasks "grunt-coffeelint"
   grunt.loadNpmTasks "grunt-mocha-test"
 
-  grunt.registerTask "blanket", =>
+  grunt.registerTask "blanket", ->
     blanket = require "blanket"
 
     blanket(
@@ -60,11 +50,11 @@ module.exports = (grunt) ->
       loader: "./node-loaders/coffee-script"
     )
 
-  grunt.registerTask "clean-coverage", =>
+  grunt.registerTask "clean-coverage", ->
     fs = require "fs"
     path = require "path"
 
-    replaceAll = (find, replace, str) =>
+    replaceAll = (find, replace, str) ->
       escapeRegExp = (str) => str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")
       str.replace(new RegExp(escapeRegExp(find), 'g'), replace)
 
@@ -75,8 +65,6 @@ module.exports = (grunt) ->
 
   # Default task(s).
   grunt.registerTask "default", ["coffeelint", "mochaTest:test"]
-  grunt.registerTask "pimatic", ["coffeelint", "mochaTest:testPimatic"]
-  grunt.registerTask "plugin", ["coffeelint", "mochaTest:testPlugin"]
   grunt.registerTask "test", ["coffeelint", "mochaTest:test"]
   grunt.registerTask "coverage",
     ["blanket", "mochaTest:testBlanket", "mochaTest:coverage", "clean-coverage"]

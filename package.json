@@ -5,6 +5,7 @@
   "files": [
     "test",
     "alert.coffee",
+    "startup.coffee",
     "README.md",
     "alert-config-schema.coffee",
     "device-config-schema.coffee",

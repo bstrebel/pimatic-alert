@@ -1,42 +1,101 @@
-events = require 'events'
-grunt = require 'grunt'
-assert = require 'assert'
-Promise = require 'bluebird'
+assert = require 'cassert'
+_ = require 'lodash'
 
-env =
-  logger:
-    debug: (stmt) ->
-      grunt.log.writeln stmt
-    info: (stmt) ->
-      grunt.log.writeln stmt
-    warn: (stmt) ->
-      grunt.log.writeln stmt
-    error: (stmt) ->
-      grunt.log.writeln stmt
-  require: (dep) ->
-    require(dep)
-    
-env.plugins = require('../node_modules/pimatic/lib/plugins') env
-env.devices = require('../node_modules/pimatic/lib/devices') env
+describe "pimatic", ->
 
-describe "alert system device", ->
+  config =
+    settings:
+      debug: true
+      logLevel: "debug"
+      httpServer:
+        enabled: true
+        port: 8080
+      httpsServer: {}
+      database:
+        client: "sqlite3"
+        connection: {
+          filename: ':memory:'
+        }
+    plugins: [
+      {
+        plugin: "alert",
+        active: true,
+        debug: true
+      }
+    ]
+    devices: []
+    rules: []
+    users: [
+      {
+        username: "admin",
+        password: "admin",
+        role: "admin"
+      }
+    ],
+    roles: [
+      {
+        name: "admin",
+        permissions: {
+          pages: "write",
+          rules: "write",
+          variables: "write",
+          messages: "write",
+          events: "write",
+          devices: "write",
+          groups: "write",
+          plugins: "write",
+          updates: "write",
+          database: "write",
+          config: "write",
+          controlDevices: true,
+          restart: true
+        }
+      }
+    ],
+    variables: []
+
+  fs = require 'fs'
+  os = require 'os'
+  configFile = "#{os.tmpdir()}/pimatic-test-config.json"
 
   framework = null
-  plugin = null
-  alert = null
+  env = null
 
-  beforeEach ->
+  before ->
+    fs.writeFileSync configFile, JSON.stringify(config)
+    process.env.PIMATIC_CONFIG = configFile
+    startup = require('../startup')
+    env = startup.env
+    startup.startup()
+      .then( (fw) ->
+        framework = fw
+        env.logger.info("Startup completed ...")
+    ).catch( (err) -> env.logger.error(err))
 
-    framework = new events.EventEmitter()
-    framework.pluginManager = new env.plugins.PluginManager(framework)
-    framework.deviceManager = new env.devices.DeviceManager(framework, {})
+  after ->
+    fs.unlinkSync configFile
 
+  deviceConfig = null
 
-    plugin = require('../alert')(env)
-    plugin.init(null, framework, {debug: true})
+  describe 'startup', ->
 
-  it "alert system device should be created", ->
-    device = new AlertSystem({id: "alert", name: "alert system"})
-    device = framework.deviceManager.getDeviceById("alert")
-    assert device?
+    it "httpServer should run", (done)->
+      http = require 'http'
+      http.get("http://localhost:#{config.settings.httpServer.port}", (res) ->
+        done()
+      ).on "error", (e) ->
+        throw e
 
+    it "httpServer should ask for password", (done)->
+      http = require 'http'
+      http.get("http://localhost:#{config.settings.httpServer.port}", (res) ->
+        assert res.statusCode is 401 # is Unauthorized
+        done()
+      ).on "error", (e) ->
+        throw e
+
+  describe 'plugin', ->
+
+    it 'should be installed', ->
+
+      assert framework.pluginManager.isInstalled('pimatic-alert')
