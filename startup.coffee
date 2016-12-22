@@ -9,7 +9,7 @@ Promise = require 'bluebird'
 #Promise.longStackTraces()
 
 # Setup the environment
-env = { logger: require '../../node_modules/pimatic/lib/logger' }
+env = { logger: require '../node_modules/pimatic/lib/logger' }
 env.api = require('../../node_modules/pimatic/lib/api')
 env.users = require('../../node_modules/pimatic/lib/users') env
 env.devices = require('../../node_modules/pimatic/lib/devices') env
