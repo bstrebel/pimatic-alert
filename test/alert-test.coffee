@@ -64,7 +64,7 @@ describe "pimatic", ->
   before ->
     fs.writeFileSync configFile, JSON.stringify(config)
     process.env.PIMATIC_CONFIG = configFile
-    startup = require('../startup')
+    startup = require('./startup')
     env = startup.env
     startup.startup()
       .then( (fw) ->

@@ -22,7 +22,7 @@ module.exports = (grunt) ->
     mochaTest:
       test:
         options:
-          timeout: 10000
+          timeout: 30000
           reporter: "spec"
           require: ['coffee-errors'] #needed for right line numbers in errors
         src: ["test/alert-test.coffee"]
