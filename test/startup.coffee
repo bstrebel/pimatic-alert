@@ -10,18 +10,18 @@ Promise = require 'bluebird'
 
 # Setup the environment
 env = { logger: require './node_modules/pimatic/lib/logger' }
-env.api = require('../../node_modules/pimatic/lib/api')
-env.users = require('../../node_modules/pimatic/lib/users') env
-env.devices = require('../../node_modules/pimatic/lib/devices') env
-env.matcher = require '../../node_modules/pimatic/lib/matcher'
-env.variables = require('../../node_modules/pimatic/lib/variables') env
-env.actions = require('../../node_modules/pimatic/lib/actions') env
-env.predicates = require('../../node_modules/pimatic/lib/predicates') env
-env.rules = require('../../node_modules/pimatic/lib/rules') env
-env.plugins = require('../../node_modules/pimatic/lib/plugins') env
-env.database = require('../../node_modules/pimatic/lib/database') env
-env.groups = require('../../node_modules/pimatic/lib/groups') env
-env.pages = require('../../node_modules/pimatic/lib/pages') env
+env.api = require('./node_modules/pimatic/lib/api')
+env.users = require('./node_modules/pimatic/lib/users') env
+env.devices = require('./node_modules/pimatic/lib/devices') env
+env.matcher = require './node_modules/pimatic/lib/matcher'
+env.variables = require('./node_modules/pimatic/lib/variables') env
+env.actions = require('./node_modules/pimatic/lib/actions') env
+env.predicates = require('./node_modules/pimatic/lib/predicates') env
+env.rules = require('./node_modules/pimatic/lib/rules') env
+env.plugins = require('./node_modules/pimatic/lib/plugins') env
+env.database = require('./node_modules/pimatic/lib/database') env
+env.groups = require('./node_modules/pimatic/lib/groups') env
+env.pages = require('./node_modules/pimatic/lib/pages') env
 env.require = (args...) -> module.require args...
 
 startup = =>
@@ -89,7 +89,7 @@ startup = =>
   process.on('uncaughtException', uncaughtException)
 
   # Setup the framework
-  env.framework = (require '../../node_modules/pimatic/lib/framework') env
+  env.framework = (require './node_modules/pimatic/lib/framework') env
   return Promise.try( =>
     framework = new env.framework.Framework configFile
     promise = framework.init().then( ->
