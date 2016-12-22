@@ -162,12 +162,16 @@ generate required slave devices and runtime variables in the background.
 
 Todo
 ----
-- Grunt test script
-- Travis integration
+- ~~Grunt test script~~
+- ~~Travis integration~~
 
 
 Changelog
 ---------
+
+0.3.6
+
+- basic grunt setup and travis integration
 
 0.3.5
 
