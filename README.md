@@ -1,3 +1,10 @@
+[![Build Status](http://img.shields.io/travis/bstrebel/pimatic-alert/master.svg)](https://travis-ci.org/bstrebel/pimatic-alert)
+[![Version](https://img.shields.io/npm/v/pimatic-alert.svg)](https://img.shields.io/npm/v/pimatic-alert.svg)
+[![downloads][downloads-image]][downloads-url]
+
+[downloads-image]: https://img.shields.io/npm/dm/pimatic-alert.svg?style=flat
+[downloads-url]: https://npmjs.org/package/pimatic-alert
+
 pimatic-alert
 =============
 The plugin is based on [_pimatic-alarm_](https://github.com/michbeck100/pimatic-alarm) which is a very neat and powerfull solution
@@ -126,6 +133,7 @@ generate required slave devices and runtime variables in the background.
       remote:
         description: "Optional remote control switch"
         type: "string"
+        default: ""
       enabled:
         description: "EnabledSwitch device"
         type: "string"
@@ -169,9 +177,15 @@ Todo
 Changelog
 ---------
 
+0.3.7
+
+- basic grunt/mocha test suite
+- updated documnetation
+- some minor improvements
+
 0.3.6
 
-- basic grunt setup and travis integration
+- initial grunt setup and travis integration
 
 0.3.5
 
