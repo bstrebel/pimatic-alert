@@ -84,7 +84,6 @@ describe "[pimatic]", ->
   os = require 'os'
   configFile = "#{os.tmpdir()}/pimatic-test-config.json"
 
-
   before ->
     fs.writeFileSync configFile, JSON.stringify(config)
     process.env.PIMATIC_CONFIG = configFile
