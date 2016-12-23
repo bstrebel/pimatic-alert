@@ -97,7 +97,17 @@ module.exports = (env) =>
         device.on event, handler
       return device
 
-###############################################################################################
+    getSensors: () => return @sensors
+
+    getSwitches: () => return @switches
+
+    getAlert: () => return @alert
+
+    getRemote: () => return @remote
+
+    getEnabled: () => return @enabled
+
+    ###############################################################################################
     ###############################################################################################
 
     constructor: (config, lastState, plugin) ->
