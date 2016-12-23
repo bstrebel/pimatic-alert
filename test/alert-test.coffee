@@ -1,7 +1,7 @@
 assert = require 'cassert'
 _ = require 'lodash'
 
-describe "framework: [pimatic]", ->
+describe "[pimatic]", ->
 
   framework = null
   env = null
@@ -101,7 +101,7 @@ describe "framework: [pimatic]", ->
 
   deviceConfig = null
 
-  describe "framework [startup]", ->
+  describe "[startup]", ->
 
     if config.settings.httpServer.enabled
 
@@ -124,7 +124,7 @@ describe "framework: [pimatic]", ->
       it "should be initialized", ->
         assert framework?
 
-  describe "framework [devices]", ->
+  describe "[devices]", ->
     it "should have remote switch", ->
       assert framework.deviceManager.getDeviceById("alert-remote")?
     it "should have alarm switch", ->
@@ -134,7 +134,7 @@ describe "framework: [pimatic]", ->
     it "should have presence switch", ->
       assert framework.deviceManager.getDeviceById("presence-sensor")?
 
-  describe "framework [AlertPlugin]", ->
+  describe "[AlertPlugin]", ->
 
     it "should be installed", ->
       assert framework.pluginManager.isInstalled('pimatic-alert')
@@ -145,7 +145,7 @@ describe "framework: [pimatic]", ->
       assert config.timeformat == "YYYY-MM-DD hh:mm:ss"
 
 
-  describe "device [AlertSwitch]", ->
+  describe "[AlertSystem]", ->
 
     alert = null
     alert_switch = null
@@ -263,8 +263,6 @@ describe "framework: [pimatic]", ->
             assert device._state == false
           done()
         setTimeout(check, 100)
-
-
 
     describe "[alert remote]", ->
 
