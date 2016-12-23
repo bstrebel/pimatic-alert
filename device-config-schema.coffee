@@ -40,6 +40,7 @@ module.exports = {
       remote:
         description: "Optional remote control switch"
         type: "string"
+        default: ''
       enabled:
         description: "EnabledSwitch device"
         type: "string"
